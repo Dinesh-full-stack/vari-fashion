@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Our story — {brand}</title>
+  <meta name="description" content="Vari Fashion is a small clothing label from Tamil Nadu. A family workshop of ten tailors in Tiruppur, a shop in Erode, and now online. Cash on delivery and 7-day returns.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Vari Fashion — Stitched in Tiruppur, sold in Erode">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/story.css">
+  <script src="/vendor/gsap/gsap.min.js" defer></script>
+  <script src="/vendor/gsap/ScrollTrigger.min.js" defer></script>
+  <script type="module" src="/js/story.js"></script>
+</head>
+<body class="home">
+  <header id="site-header"></header>
+
+  <!--
+    PHOTOS: put your photos in public/media/ with these exact names (JPG).
+    Until a file exists, the page shows a labelled empty frame in its place.
+      hero.jpg               a finished piece being worn, or the workshop at work (landscape)
+      workshop-cutting.jpg   the cutting table
+      workshop-stitching.jpg a tailor at the machine
+      workshop-checking.jpg  someone checking seams / measuring
+      detail-1.jpg           a close-up: fabric, stitching, a label
+      team.jpg               the workshop team together
+      shop-erode.jpg         the shop in Erode, inside or the front
+  -->
+
+  <main id="main">
+    <!-- Masthead -->
+    <div class="masthead wrap">
+      <span>Issue No. 01</span>
+      <span>Erode &amp; Tiruppur, Tamil Nadu</span>
+      <span>Since 2019</span>
+    </div>
+
+    <!-- Opening spread -->
+    <section class="opening wrap">
+      <figure class="opening-photo" data-reveal>
+        <img data-media="hero" src="/media/hero.jpg" alt="Vari Fashion clothes" fetchpriority="high">
+        <figcaption><span>Fig. 1</span> Our workshop in Tiruppur.</figcaption>
+      </figure>
+      <div class="opening-copy">
+        <h1 data-rise>Stitched in Tiruppur. <em>Sold from our little shop in Erode.</em></h1>
+        <p class="lede" data-rise>Vari Fashion is a small label run by a few friends and one family workshop. Around ten tailors make everything we sell, and every piece is checked by hand before it's folded.</p>
+        <div class="opening-actions" data-rise>
+          <a class="btn" href="/shop">Shop the collection <span class="arrow">→</span></a>
+          <a class="link" href="#letter">Read how we started</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Letter (DRAFT: edit anything that isn't exactly true) -->
+    <section class="letter" id="letter">
+      <div class="wrap letter-grid">
+        <aside class="letter-side">
+          <span class="kicker">A note from us</span>
+          <span class="pageno">p. 02</span>
+        </aside>
+        <div class="letter-body" data-rise>
+          <h2>How Vari Fashion started</h2>
+          <div class="columns">
+            <p class="dropcap">In 2019 a few of us stopped talking about starting a clothing label and actually started one. We already knew Tiruppur. A huge share of the clothes made in India get stitched there, mostly in big units turning out thousands of the same piece.</p>
+            <p>We wanted the opposite. A small room, a handful of machines, and people who would still be there next year. So we set up a family workshop in Tiruppur. Today it's around ten people: tailors, a cutter, and someone whose job is to say “no, do that seam again”.</p>
+            <p>We make things in small runs. If a style sells, we make a little more. If it doesn't, we learn something and move on. Nothing sits in a warehouse for years.</p>
+            <p>Finished pieces travel about an hour up the road to our shop in Erode. That's where most of our customers have met us so far. They come in, feel the cloth, try things on and tell us what they'd change. This website is how we bring that shop to people who can't drop in.</p>
+          </div>
+          <p class="signoff">— The Vari Fashion team, Erode</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Two towns -->
+    <section class="towns wrap" aria-label="Where we make and sell">
+      <div class="town">
+        <span class="kicker">Where it's made</span>
+        <h3>Tiruppur</h3>
+        <p>Our family workshop. Cutting, stitching, checking and packing all happen in one place, under one roof.</p>
+      </div>
+      <svg class="route" viewBox="0 0 400 120" aria-hidden="true">
+        <path data-route d="M10 92 C 90 20, 170 110, 240 56 S 350 30, 390 30"/>
+        <circle cx="10" cy="92" r="5"/><circle cx="390" cy="30" r="5"/>
+        <text x="200" y="114" text-anchor="middle">about an hour by road</text>
+      </svg>
+      <div class="town">
+        <span class="kicker">Where you'll find us</span>
+        <h3>Erode</h3>
+        <p>Our shop. Come in, try things on, and say hello.</p>
+      </div>
+    </section>
+
+    <!-- How a piece gets made -->
+    <section class="making wrap" aria-label="How a piece gets made">
+      <header class="section-head">
+        <h2>How a piece gets made</h2>
+        <span class="pageno">p. 03</span>
+      </header>
+      <div class="making-grid">
+        <figure class="m-photo a" data-reveal><img data-media="workshop-cutting" src="/media/workshop-cutting.jpg" alt="Cutting fabric" loading="lazy">
+          <figcaption><span>Fig. 2</span> The cutting table.</figcaption></figure>
+        <div class="m-step s1" data-rise><b>1</b><h3>Cut in small batches</h3><p>Fabric is laid out and cut a few dozen pieces at a time, so we're never sitting on a thousand of one shirt.</p></div>
+        <figure class="m-photo b" data-reveal><img data-media="workshop-stitching" src="/media/workshop-stitching.jpg" alt="Stitching at the machine" loading="lazy">
+          <figcaption><span>Fig. 3</span> Stitching, Tiruppur.</figcaption></figure>
+        <div class="m-step s2" data-rise><b>2</b><h3>Stitched by people, not a line</h3><p>Each piece goes through the hands of our tailors. Ten people, not a floor of three hundred.</p></div>
+        <div class="m-step s3" data-rise><b>3</b><h3>Checked before it's folded</h3><p>Seams, buttons and measurements are checked against the size chart. Anything that isn't right goes back to the machine.</p></div>
+        <figure class="m-photo c" data-reveal><img data-media="workshop-checking" src="/media/workshop-checking.jpg" alt="Checking a finished piece" loading="lazy">
+          <figcaption><span>Fig. 4</span> Final check.</figcaption></figure>
+        <div class="m-step s4" data-rise><b>4</b><h3>Then to Erode, and to you</h3><p>Finished pieces go to our shop, and online orders are packed by the same people who sell over the counter.</p></div>
+      </div>
+    </section>
+
+    <!-- Pull quote -->
+    <section class="pull wrap">
+      <blockquote data-rise>“If we wouldn't wear it ourselves, it doesn't go on the shelf.”</blockquote>
+      <figure class="pull-photo" data-reveal><img data-media="detail-1" src="/media/detail-1.jpg" alt="Close-up of stitching" loading="lazy">
+        <figcaption><span>Fig. 5</span> Detail.</figcaption></figure>
+    </section>
+
+    <!-- Collection spread -->
+    <section class="spread" id="collection" aria-label="The collection">
+      <div class="wrap">
+        <header class="section-head">
+          <h2>This season</h2>
+          <a class="link" href="/shop">See all pieces →</a>
+        </header>
+        <div class="spread-grid" data-spread></div>
+      </div>
+    </section>
+
+    <!-- The people -->
+    <section class="people wrap">
+      <figure class="people-photo" data-reveal><img data-media="team" src="/media/team.jpg" alt="The Vari Fashion workshop team" loading="lazy">
+        <figcaption><span>Fig. 6</span> The workshop, Tiruppur.</figcaption></figure>
+      <div class="people-copy" data-rise>
+        <span class="kicker">The people</span>
+        <h2>Around ten of us, most of us family.</h2>
+        <p>There's no factory floor here, just a workshop where everyone knows everyone. When you write to us, the person who answers can usually tell you who stitched your order.</p>
+      </div>
+    </section>
+
+    <!-- Visit + practical -->
+    <section class="visit">
+      <div class="wrap visit-grid">
+        <figure class="visit-photo" data-reveal><img data-media="shop-erode" src="/media/shop-erode.jpg" alt="The Vari Fashion shop in Erode" loading="lazy">
+          <figcaption><span>Fig. 7</span> Our shop, Erode.</figcaption></figure>
+        <div class="visit-copy" data-rise>
+          <h2>Come and see us in Erode</h2>
+          <p class="addr" data-address>Shop address (set in Admin › Settings)</p>
+          <p class="hours" data-hours></p>
+          <a class="link" data-wa target="_blank" rel="noopener">Message us on WhatsApp</a>
+          <ul class="facts">
+            <li><b>Delivery</b> <span data-free-ship>Free above ₹1,999 anywhere in India</span></li>
+            <li><b>Payment</b> <span>UPI, cards, net banking or cash on delivery</span></li>
+            <li><b>Returns</b> <span>Exchange or refund within 7 days of delivery</span></li>
+            <li><b>Buying more?</b> <span><a class="link" href="/bulk">Ask us for a bulk price</a></span></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer id="site-footer"></footer>
+</body>
+</html>

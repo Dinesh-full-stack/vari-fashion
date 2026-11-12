@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" preserveAspectRatio="xMidYMid slice"><defs>
+  <filter id="w" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.018" numOctaves="2" seed="3"/><feDisplacementMap in="SourceGraphic" scale="5"/></filter>
+  <filter id="g"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch" seed="3"/><feColorMatrix values="0 0 0 0 0.11  0 0 0 0 0.10  0 0 0 0 0.09  0 0 0 0.09 0"/></filter>
+  <pattern id="h" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="9" stroke="#1c1916" stroke-width="1.2" opacity=".28"/></pattern>
+  <pattern id="hl" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(-30)"><line x1="0" y1="0" x2="0" y2="14" stroke="#fff" stroke-width="2" opacity=".35"/></pattern>
+  <pattern id="weave" width="12" height="12" patternUnits="userSpaceOnUse"><path d="M0 3H12M0 9H12" stroke="#1c1916" stroke-width="1" opacity=".12"/><path d="M3 0V12M9 0V12" stroke="#fff" stroke-width="1" opacity=".10"/></pattern>
+</defs>
+<rect width="800" height="1000" fill="#ece3d3"/>
+<g filter="url(#w)" stroke="#1c1916" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+  <rect x="430" y="90" width="300" height="380" fill="#f4efe6"/><rect x="430" y="90" width="300" height="380" fill="url(#hl)" stroke="none"/>
+  <rect x="430" y="90" width="300" height="380" fill="none"/><line x1="580" y1="90" x2="580" y2="470"/><line x1="430" y1="280" x2="730" y2="280"/>
+  <line x1="40" y1="120" x2="380" y2="120" stroke-width="4"/>
+  <path d="M100 128 q0 -12 8 -12" fill="none" stroke-width="2.5"/><path d="M66 156 L100 132 L134 156" fill="none" stroke-width="2.5"/>
+    <path d="M64 162 L84 152 Q100 164 116 152 L136 162 L152 202 L136 210 L132 198 L132 302 L68 302 L68 198 L64 210 L48 202 Z" fill="#2e3a5c"/><line x1="100" y1="162" x2="100" y2="302" stroke-width="2" opacity=".5"/><path d="M190 128 q0 -12 8 -12" fill="none" stroke-width="2.5"/><path d="M156 156 L190 132 L224 156" fill="none" stroke-width="2.5"/>
+    <path d="M154 162 L174 152 Q190 164 206 152 L226 162 L242 202 L226 210 L222 198 L222 282 L158 282 L158 198 L154 210 L138 202 Z" fill="#8a9a7b"/><line x1="190" y1="162" x2="190" y2="282" stroke-width="2" opacity=".5"/><path d="M285 128 q0 -12 8 -12" fill="none" stroke-width="2.5"/><path d="M251 156 L285 132 L319 156" fill="none" stroke-width="2.5"/>
+    <path d="M251 162 L269 152 Q285 166 301 152 L319 162 L329 242 L315 244 L315 322 L255 322 L255 244 L241 242 Z" fill="#c08a2d"/><line x1="285" y1="162" x2="285" y2="322" stroke-width="2" opacity=".5"/>
+  <rect x="0" y="830" width="800" height="170" fill="#cdb48c"/><line x1="0" y1="830" x2="800" y2="830"/>
+  <rect x="0" y="830" width="800" height="170" fill="url(#h)" stroke="none"/>
+  <!-- dress form -->
+  <path d="M400 820 L400 760 M340 840 Q400 800 460 840" fill="none" stroke-width="4"/>
+  <path d="M330 360 Q400 330 470 360 Q500 420 482 500 Q470 560 490 640 Q500 720 470 760 L330 760 Q300 720 310 640 Q330 560 318 500 Q300 420 330 360 Z" fill="#a4502f"/>
+  <path d="M330 360 Q400 330 470 360 Q500 420 482 500 Q470 560 490 640 Q500 720 470 760 L330 760 Q300 720 310 640 Q330 560 318 500 Q300 420 330 360 Z" fill="url(#weave)" stroke="none"/>
+  <path d="M370 350 Q400 400 430 350" fill="none" stroke="#f4efe6" stroke-width="3"/>
+  <line x1="400" y1="380" x2="400" y2="560" stroke="#f4efe6" stroke-dasharray="7 9" stroke-width="2.5"/>
+  <path d="M380 330 Q400 300 420 330 Z" fill="#a88a5c"/><rect x="392" y="300" width="16" height="30" fill="#a88a5c"/>
+  <!-- measuring tape around the neck -->
+  <path d="M352 352 Q340 420 356 520 L372 520 Q358 430 368 356" fill="#c08a2d"/>
+  <path d="M448 352 Q470 400 446 470 L462 474 Q486 404 462 350" fill="#c08a2d"/>
+  <line x1="356" y1="370" x2="364" y2="370" stroke-width="2"/><line x1="355.6" y1="391" x2="363.6" y2="391" stroke-width="2"/><line x1="355.2" y1="412" x2="363.2" y2="412" stroke-width="2"/><line x1="354.8" y1="433" x2="362.8" y2="433" stroke-width="2"/><line x1="354.4" y1="454" x2="362.4" y2="454" stroke-width="2"/><line x1="354" y1="475" x2="362" y2="475" stroke-width="2"/><line x1="353.6" y1="496" x2="361.6" y2="496" stroke-width="2"/>
+  <!-- spools on the table -->
+  <rect x="560" y="770" width="46" height="62" fill="#2e3a5c"/><rect x="552" y="762" width="62" height="12" fill="#a88a5c"/><rect x="552" y="828" width="62" height="10" fill="#a88a5c"/>
+  <rect x="630" y="784" width="40" height="48" fill="#a4502f"/><rect x="623" y="777" width="54" height="10" fill="#a88a5c"/><rect x="623" y="828" width="54" height="10" fill="#a88a5c"/>
+  <path d="M606 790 Q680 720 700 840" fill="none" stroke="#2e3a5c" stroke-width="2"/>
+  <path d="M120 860 l60 -20 M150 860 l40 -40" stroke-width="3"/><circle cx="112" cy="866" r="12" fill="none"/><circle cx="140" cy="872" r="12" fill="none"/>
+</g>
+<rect width="800" height="1000" filter="url(#g)"/>
+</svg>

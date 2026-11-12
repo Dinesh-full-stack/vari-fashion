@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <title>Shop all — {brand}</title>
+  <meta name="description" content="Clothes from our family workshop in Tiruppur. Cash on delivery, free shipping above ₹1,999 and 7-day returns.">
+  <script type="module" src="/js/shop.js"></script>
+</head>
+<body>
+  <header id="site-header"></header>
+  <main id="main" class="page">
+    <div class="wrap">
+      <nav class="crumbs" aria-label="Breadcrumb"><a href="/">Home</a> / <span data-crumb>Shop</span></nav>
+      <div class="page-head"><h1 data-title>All products</h1></div>
+      <div class="shop-layout">
+        <aside class="filters-panel" data-panel aria-label="Filters">
+          <div class="filters-head"><b>FILTERS</b><button type="button" data-clear>Clear all</button></div>
+          <h3>Category</h3><div data-f-cat></div>
+          <h3>Size</h3><div data-f-size></div>
+          <h3>Price</h3><div data-f-price></div>
+          <h3>Colour</h3><div data-f-color></div>
+          <h3>Availability</h3><label><input type="checkbox" data-f-stock> In stock only</label>
+          <button class="btn block filter-toggle" type="button" data-close-panel style="margin-top:20px">Show results</button>
+        </aside>
+        <div>
+          <div class="results-bar">
+            <div class="actions" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+              <button class="btn ghost filter-toggle" type="button" data-open-panel style="min-height:40px">Filters</button>
+              <span class="count" data-count></span>
+              <div class="chips" data-active></div>
+            </div>
+            <label class="sort"><span class="sr-only">Sort by</span><select data-sort>
+              <option value="featured">Sort: Recommended</option><option value="new">What's new</option><option value="discount">Better discount</option>
+              <option value="low">Price: low to high</option><option value="high">Price: high to low</option>
+            </select></label>
+          </div>
+          <div class="product-grid" data-grid>
+            <div class="card"><div class="media skeleton"></div></div><div class="card"><div class="media skeleton"></div></div>
+            <div class="card"><div class="media skeleton"></div></div><div class="card"><div class="media skeleton"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <footer id="site-footer"></footer>
+</body>
+</html>

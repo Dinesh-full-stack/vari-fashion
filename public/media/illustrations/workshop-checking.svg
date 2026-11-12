@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750 1000" preserveAspectRatio="xMidYMid slice"><defs>
+  <filter id="w" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.018" numOctaves="2" seed="17"/><feDisplacementMap in="SourceGraphic" scale="5"/></filter>
+  <filter id="g"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch" seed="17"/><feColorMatrix values="0 0 0 0 0.11  0 0 0 0 0.10  0 0 0 0 0.09  0 0 0 0.09 0"/></filter>
+  <pattern id="h" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="9" stroke="#1c1916" stroke-width="1.2" opacity=".28"/></pattern>
+  <pattern id="hl" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(-30)"><line x1="0" y1="0" x2="0" y2="14" stroke="#fff" stroke-width="2" opacity=".35"/></pattern>
+  <pattern id="weave" width="12" height="12" patternUnits="userSpaceOnUse"><path d="M0 3H12M0 9H12" stroke="#1c1916" stroke-width="1" opacity=".12"/><path d="M3 0V12M9 0V12" stroke="#fff" stroke-width="1" opacity=".10"/></pattern>
+</defs>
+<rect width="750" height="1000" fill="#ece3d3"/>
+<g filter="url(#w)" stroke="#1c1916" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+  <line x1="60" y1="120" x2="690" y2="120" stroke-width="5"/>
+  <path d="M375 150 q0 -18 12 -22" fill="none" stroke-width="3"/><path d="M300 186 L375 150 L450 186" fill="none" stroke-width="3"/>
+  <path d="M300 190 L345 168 Q375 200 405 168 L450 190 L560 330 L500 372 L470 330 L474 720 L276 720 L280 330 L250 372 L190 330 Z" fill="#2e3a5c"/><path d="M300 190 L345 168 Q375 200 405 168 L450 190 L560 330 L500 372 L470 330 L474 720 L276 720 L280 330 L250 372 L190 330 Z" fill="url(#weave)" stroke="none"/>
+  <path d="M345 168 L375 236 L405 168" fill="#4a5a85" stroke-width="2.5"/>
+  <line x1="375" y1="236" x2="375" y2="720" stroke-width="2" opacity=".6"/>
+  <circle cx="375" cy="290" r="7" fill="#f4efe6"/><circle cx="375" cy="370" r="7" fill="#f4efe6"/><circle cx="375" cy="450" r="7" fill="#f4efe6"/><circle cx="375" cy="530" r="7" fill="#f4efe6"/><circle cx="375" cy="610" r="7" fill="#f4efe6"/><circle cx="375" cy="690" r="7" fill="#f4efe6"/>
+  <rect x="300" y="420" width="56" height="64" fill="none" stroke-width="2" opacity=".6"/>
+  <!-- tape measure across the chest -->
+  <path d="M150 380 Q375 344 610 380 L606 414 Q375 378 154 414 Z" fill="#c08a2d"/>
+  <line x1="170" y1="380.4596671234976" x2="170" y2="396.4596671234976" stroke-width="1.8"/><line x1="191" y1="376.8144653043662" x2="191" y2="384.8144653043662" stroke-width="1.8"/><line x1="212" y1="373.31681280150974" x2="212" y2="381.31681280150974" stroke-width="1.8"/><line x1="233" y1="370.0385311643639" x2="233" y2="378.0385311643639" stroke-width="1.8"/><line x1="254" y1="367.0469373337837" x2="254" y2="383.0469373337837" stroke-width="1.8"/><line x1="275" y1="364.4034613414886" x2="275" y2="372.4034613414886" stroke-width="1.8"/><line x1="296" y1="362.1623848925673" x2="296" y2="370.1623848925673" stroke-width="1.8"/><line x1="317" y1="360.3697267332599" x2="317" y2="368.3697267332599" stroke-width="1.8"/><line x1="338" y1="359.0622976921164" x2="338" y2="375.0622976921164" stroke-width="1.8"/><line x1="359" y1="358.26694479851864" x2="359" y2="366.26694479851864" stroke-width="1.8"/><line x1="380" y1="358" x2="380" y2="366" stroke-width="1.8"/><line x1="401" y1="358.26694479851864" x2="401" y2="366.26694479851864" stroke-width="1.8"/><line x1="422" y1="359.0622976921164" x2="422" y2="375.0622976921164" stroke-width="1.8"/><line x1="443" y1="360.3697267332599" x2="443" y2="368.3697267332599" stroke-width="1.8"/><line x1="464" y1="362.1623848925673" x2="464" y2="370.1623848925673" stroke-width="1.8"/><line x1="485" y1="364.4034613414886" x2="485" y2="372.4034613414886" stroke-width="1.8"/><line x1="506" y1="367.04693733378366" x2="506" y2="383.04693733378366" stroke-width="1.8"/><line x1="527" y1="370.0385311643639" x2="527" y2="378.0385311643639" stroke-width="1.8"/><line x1="548" y1="373.31681280150974" x2="548" y2="381.31681280150974" stroke-width="1.8"/><line x1="569" y1="376.8144653043662" x2="569" y2="384.8144653043662" stroke-width="1.8"/><line x1="590" y1="380.4596671234976" x2="590" y2="396.4596671234976" stroke-width="1.8"/>
+  <path d="M610 380 Q670 460 628 560" fill="none" stroke="#c08a2d" stroke-width="16"/>
+  <!-- tag with a tick -->
+  <line x1="375" y1="530" x2="470" y2="580" stroke-width="2"/>
+  <g transform="rotate(10 500 640)"><rect x="452" y="574" width="96" height="130" rx="8" fill="#f4efe6"/>
+  <path d="M478 640 L498 662 L534 616" fill="none" stroke="#a4502f" stroke-width="7"/></g>
+  <!-- table with thread snips -->
+  <rect x="0" y="860" width="750" height="140" fill="#cdb48c"/><line x1="0" y1="860" x2="750" y2="860"/><rect x="0" y="860" width="750" height="140" fill="url(#h)" stroke="none" opacity=".45"/>
+  <path d="M120 910 q20 -20 40 0 t40 0" fill="none" stroke="#a4502f" stroke-width="2.5"/><path d="M560 940 q16 -26 40 -8" fill="none" stroke="#2e3a5c" stroke-width="2.5"/>
+  <path d="M300 930 l70 -24 M330 934 l46 -40" stroke-width="3"/><circle cx="292" cy="934" r="12" fill="none"/><circle cx="320" cy="942" r="12" fill="none"/>
+</g>
+<rect width="750" height="1000" filter="url(#g)"/>
+</svg>

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <title>Checkout — {brand}</title>
+  <meta name="description" content="Secure checkout.">
+  <script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
+  <script type="module" src="/js/checkout.js"></script>
+</head>
+<body>
+  <header id="site-header"></header>
+  <main id="main" class="page">
+    <div class="wrap">
+      <div class="page-head"><h1>Checkout</h1></div>
+      <div class="checkout">
+        <form data-form novalidate>
+          <div data-test-banner></div>
+          <h2 class="step-title">Contact</h2>
+          <div class="grid-2">
+            <div class="field"><label for="name">Full name</label><input id="name" name="name" autocomplete="name" required></div>
+            <div class="field"><label for="phone">Mobile number</label><input id="phone" name="phone" inputmode="numeric" autocomplete="tel-national" maxlength="10" required><span class="hint">For delivery updates and order tracking</span></div>
+          </div>
+          <div class="field"><label for="email">Email</label><input id="email" name="email" type="email" autocomplete="email" required></div>
+          <h2 class="step-title">Delivery address</h2>
+          <div class="field"><label for="line1">House / flat, street</label><input id="line1" name="line1" autocomplete="address-line1" required></div>
+          <div class="field"><label for="line2">Area, landmark (optional)</label><input id="line2" name="line2" autocomplete="address-line2"></div>
+          <div class="grid-2">
+            <div class="field"><label for="pincode">Pincode</label><input id="pincode" name="pincode" inputmode="numeric" maxlength="6" autocomplete="postal-code" required></div>
+            <div class="field"><label for="city">City</label><input id="city" name="city" autocomplete="address-level2" required></div>
+          </div>
+          <div class="field"><label for="state">State / UT</label><select id="state" name="state" autocomplete="address-level1" required><option value="">Choose…</option></select></div>
+          <h2 class="step-title">Payment</h2>
+          <div class="pay-options" data-pay></div>
+          <div data-error role="alert"></div>
+          <button class="btn block" type="submit" data-submit>Place order</button>
+          <p style="font-size:12px;color:var(--muted)">By placing your order you agree to our <a class="link" href="/policies#terms" target="_blank">terms</a> and <a class="link" href="/policies#returns" target="_blank">return policy</a>. Prices include GST.</p>
+        </form>
+        <aside class="summary" data-summary></aside>
+      </div>
+    </div>
+  </main>
+  <footer id="site-footer"></footer>
+</body>
+</html>

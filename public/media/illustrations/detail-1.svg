@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice"><defs>
+  <filter id="w" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.018" numOctaves="2" seed="23"/><feDisplacementMap in="SourceGraphic" scale="5"/></filter>
+  <filter id="g"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch" seed="23"/><feColorMatrix values="0 0 0 0 0.11  0 0 0 0 0.10  0 0 0 0 0.09  0 0 0 0.09 0"/></filter>
+  <pattern id="h" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="9" stroke="#1c1916" stroke-width="1.2" opacity=".28"/></pattern>
+  <pattern id="hl" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(-30)"><line x1="0" y1="0" x2="0" y2="14" stroke="#fff" stroke-width="2" opacity=".35"/></pattern>
+  <pattern id="weave" width="12" height="12" patternUnits="userSpaceOnUse"><path d="M0 3H12M0 9H12" stroke="#1c1916" stroke-width="1" opacity=".12"/><path d="M3 0V12M9 0V12" stroke="#fff" stroke-width="1" opacity=".10"/></pattern>
+</defs>
+<rect width="1000" height="1000" fill="#a4502f"/>
+<g filter="url(#w)" stroke="#1c1916" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+  <rect width="1000" height="1000" fill="url(#weave)" stroke="none"/>
+  <path d="M-20 620 Q300 520 520 560 T1020 420 L1020 1020 L-20 1020 Z" fill="#c47a52"/>
+  <path d="M-20 620 Q300 520 520 560 T1020 420" fill="none" stroke-width="4"/>
+  <path d="M-20 660 Q300 560 520 600 T1020 460" fill="none" stroke="#f4efe6" stroke-dasharray="26 16" stroke-width="6"/>
+  <path d="M-20 580 Q300 480 520 520 T1020 380" fill="none" stroke="#f4efe6" stroke-dasharray="26 16" stroke-width="6"/>
+  <!-- button -->
+  <circle cx="330" cy="300" r="96" fill="#f4efe6"/><circle cx="330" cy="300" r="74" fill="none" stroke-width="2.5"/>
+  <circle cx="300" cy="270" r="10" fill="#1c1916"/><circle cx="360" cy="270" r="10" fill="#1c1916"/><circle cx="300" cy="330" r="10" fill="#1c1916"/><circle cx="360" cy="330" r="10" fill="#1c1916"/>
+  <path d="M300 270 L360 330 M360 270 L300 330" stroke="#2e3a5c" stroke-width="7"/>
+  <!-- woven label -->
+  <g transform="rotate(-8 700 760)">
+    <rect x="560" y="690" width="300" height="140" fill="#f4efe6"/>
+    <rect x="576" y="706" width="268" height="108" fill="none" stroke-dasharray="8 7" stroke-width="2"/>
+    <text x="710" y="768" text-anchor="middle" font-family="Georgia, serif" font-size="40" fill="#1c1916" stroke="none">Vari</text>
+    <text x="710" y="798" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="22" fill="#a4502f" stroke="none">Tiruppur</text>
+  </g>
+  <path d="M820 200 q40 60 -10 120 q-40 50 20 110" fill="none" stroke="#f4efe6" stroke-width="3"/>
+</g>
+<rect width="1000" height="1000" filter="url(#g)"/>
+</svg>

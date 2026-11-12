@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" preserveAspectRatio="xMidYMid slice"><defs>
+  <filter id="w" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.018" numOctaves="2" seed="37"/><feDisplacementMap in="SourceGraphic" scale="5"/></filter>
+  <filter id="g"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch" seed="37"/><feColorMatrix values="0 0 0 0 0.11  0 0 0 0 0.10  0 0 0 0 0.09  0 0 0 0.09 0"/></filter>
+  <pattern id="h" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="9" stroke="#1c1916" stroke-width="1.2" opacity=".28"/></pattern>
+  <pattern id="hl" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(-30)"><line x1="0" y1="0" x2="0" y2="14" stroke="#fff" stroke-width="2" opacity=".35"/></pattern>
+  <pattern id="weave" width="12" height="12" patternUnits="userSpaceOnUse"><path d="M0 3H12M0 9H12" stroke="#1c1916" stroke-width="1" opacity=".12"/><path d="M3 0V12M9 0V12" stroke="#fff" stroke-width="1" opacity=".10"/></pattern>
+</defs>
+<rect width="1200" height="900" fill="#f4efe6"/>
+<g filter="url(#w)" stroke="#1c1916" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+  <rect x="0" y="0" width="1200" height="900" fill="#f1e7d6" stroke="none"/>
+  <rect x="120" y="110" width="960" height="680" fill="#e6dccb"/>
+  <rect x="120" y="110" width="960" height="680" fill="url(#h)" stroke="none" opacity=".25"/>
+  <!-- sign board -->
+  <rect x="220" y="150" width="760" height="110" fill="#1c1916"/>
+  <text x="600" y="222" text-anchor="middle" font-family="Georgia, serif" font-size="58" fill="#f4efe6" stroke="none">Vari <tspan font-style="italic" fill="#c08a2d">Fashion</tspan></text>
+  <!-- awning -->
+  <path d="M140 290 L1060 290 L1100 380 L100 380 Z" fill="#f4efe6"/>
+  <path d="M140 290 L186 290 L190 380 L110 380 Z" fill="#a4502f" stroke="none"/><path d="M324 290 L370 290 L382 380 L302 380 Z" fill="#a4502f" stroke="none"/><path d="M508 290 L554 290 L574 380 L494 380 Z" fill="#a4502f" stroke="none"/><path d="M692 290 L738 290 L766 380 L686 380 Z" fill="#a4502f" stroke="none"/><path d="M876 290 L922 290 L958 380 L878 380 Z" fill="#a4502f" stroke="none"/>
+  <path d="M100 380 q25 34 50 0 q25 34 50 0 q25 34 50 0 q25 34 50 0 q25 34 50 0 q25 34 50 0 q25 34 50 0 q25 34 50 0 q25 34 50 0 q25 34 50 0 q25 34 50 0 q25 34 50 0 q25 34 50 0 q25 34 50 0 q25 34 50 0 q25 34 50 0 q25 34 50 0 q25 34 50 0 q25 34 50 0 q25 34 50 0" fill="#a4502f"/>
+  <!-- window with clothes -->
+  <rect x="180" y="440" width="520" height="300" fill="#fdf8ee"/><rect x="180" y="440" width="520" height="300" fill="url(#hl)" stroke="none" opacity=".7"/>
+  <line x1="200" y1="480" x2="680" y2="480" stroke-width="3"/>
+  <path d="M250 486 q0 -12 8 -12" fill="none" stroke-width="2.5"/><path d="M216 514 L250 490 L284 514" fill="none" stroke-width="2.5"/>
+    <path d="M214 520 L234 510 Q250 522 266 510 L286 520 L302 560 L286 568 L282 556 L282 620 L218 620 L218 556 L214 568 L198 560 Z" fill="#2e3a5c"/><line x1="250" y1="520" x2="250" y2="620" stroke-width="2" opacity=".5"/><path d="M340 486 q0 -12 8 -12" fill="none" stroke-width="2.5"/><path d="M306 514 L340 490 L374 514" fill="none" stroke-width="2.5"/>
+    <path d="M306 520 L324 510 Q340 524 356 510 L374 520 L384 600 L370 602 L370 650 L310 650 L310 602 L296 600 Z" fill="#a4502f"/><line x1="340" y1="520" x2="340" y2="650" stroke-width="2" opacity=".5"/><path d="M430 486 q0 -12 8 -12" fill="none" stroke-width="2.5"/><path d="M396 514 L430 490 L464 514" fill="none" stroke-width="2.5"/>
+    <path d="M394 520 L414 510 Q430 522 446 510 L466 520 L482 560 L466 568 L462 556 L462 620 L398 620 L398 556 L394 568 L378 560 Z" fill="#8a9a7b"/><line x1="430" y1="520" x2="430" y2="620" stroke-width="2" opacity=".5"/><path d="M520 486 q0 -12 8 -12" fill="none" stroke-width="2.5"/><path d="M486 514 L520 490 L554 514" fill="none" stroke-width="2.5"/>
+    <path d="M486 520 L504 510 Q520 524 536 510 L554 520 L564 600 L550 602 L550 640 L490 640 L490 602 L476 600 Z" fill="#c08a2d"/><line x1="520" y1="520" x2="520" y2="640" stroke-width="2" opacity=".5"/><path d="M610 486 q0 -12 8 -12" fill="none" stroke-width="2.5"/><path d="M576 514 L610 490 L644 514" fill="none" stroke-width="2.5"/>
+    <path d="M574 520 L594 510 Q610 522 626 510 L646 520 L662 560 L646 568 L642 556 L642 620 L578 620 L578 556 L574 568 L558 560 Z" fill="#4a5a85"/><line x1="610" y1="520" x2="610" y2="620" stroke-width="2" opacity=".5"/>
+  <rect x="180" y="440" width="520" height="300" fill="none" stroke-width="5"/>
+  <!-- door -->
+  <rect x="760" y="430" width="230" height="360" fill="#a88a5c"/><rect x="785" y="460" width="180" height="200" fill="#fdf8ee"/>
+  <rect x="785" y="460" width="180" height="200" fill="url(#hl)" stroke="none" opacity=".7"/><circle cx="950" cy="700" r="8" fill="#c08a2d"/>
+  <rect x="815" y="500" width="120" height="46" fill="#f4efe6"/><text x="875" y="531" text-anchor="middle" font-family="Georgia, serif" font-size="22" fill="#1c1916" stroke="none">Open</text>
+  <!-- plant, steps, scooter -->
+  <rect x="1010" y="700" width="60" height="90" fill="#a4502f"/><path d="M1040 700 q-50 -60 -20 -130 M1040 700 q10 -90 50 -120 M1040 700 q-10 -60 -60 -70" fill="none" stroke="#8a9a7b" stroke-width="7"/>
+  <rect x="100" y="790" width="1000" height="34" fill="#d9cdb7"/><rect x="60" y="824" width="1080" height="34" fill="#cfc1a8"/>
+  <line x1="0" y1="858" x2="1200" y2="858"/>
+</g>
+<rect width="1200" height="900" filter="url(#g)"/>
+</svg>

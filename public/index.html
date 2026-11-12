@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{brand} — Shop shirts, kurtas &amp; more online | Made in Tiruppur</title>
+  <meta name="description" content="Shop clothes made by our family workshop in Tiruppur. Free shipping above ₹1,999, cash on delivery across India and 7-day easy returns.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Vari Fashion — Made in Tiruppur">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/home.css">
+  <script type="module" src="/js/home.js"></script>
+</head>
+<body>
+  <header id="site-header"></header>
+
+  <!-- All text, banners and images on this page are edited in Admin › Homepage. -->
+  <main id="main">
+    <section class="hero-slider" aria-roledescription="carousel" aria-label="Offers">
+      <div class="slides" data-slides><div class="slide skeleton" style="--bg:#f2eee8"></div></div>
+      <button class="slide-arrow prev" data-prev aria-label="Previous offer">‹</button>
+      <button class="slide-arrow next" data-next aria-label="Next offer">›</button>
+      <div class="dots" data-dots></div>
+    </section>
+
+    <section class="wrap block" data-section="categories">
+      <div class="block-head"><h2 data-title></h2></div>
+      <div class="cat-grid" data-cats></div>
+    </section>
+
+    <section class="wrap block" data-section="newArrivals">
+      <div class="block-head"><h2 data-title></h2>
+        <div class="rail-nav"><button data-rail-prev aria-label="Scroll left">‹</button><button data-rail-next aria-label="Scroll right">›</button>
+        <a class="link" href="/shop?sort=new">View all</a></div></div>
+      <div class="rail" data-rail></div>
+    </section>
+
+    <section class="wrap block promos" data-section="promos" data-promos></section>
+
+    <section class="wrap block" data-section="trending">
+      <div class="block-head"><h2 data-title></h2><a class="link" href="/shop">View all</a></div>
+      <div class="product-grid" data-trending></div>
+    </section>
+
+    <section class="wrap block" data-section="story">
+      <a class="story-strip" href="/story">
+        <img src="/media/illustrations/hero.svg" alt="" loading="lazy" data-story-img>
+        <div>
+          <span class="eyebrow">Our story</span>
+          <h2 data-title></h2>
+          <p data-story-text></p>
+          <span class="link">Read our story →</span>
+        </div>
+      </a>
+    </section>
+  </main>
+
+  <footer id="site-footer"></footer>
+</body>
+</html>

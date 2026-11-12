@@ -1,0 +1,22 @@
+{
+  "name": "garment-store",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Premium garment store: scroll storytelling storefront, checkout, tracking, returns and admin panel.",
+  "type": "module",
+  "main": "server/index.js",
+  "engines": {
+    "node": ">=22.5"
+  },
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "seed": "node server/seed.js",
+    "test": "node --test test/"
+  },
+  "dependencies": {
+    "express": "^4.22.3",
+    "gsap": "^3.12.5",
+    "multer": "^2.5.0"
+  }
+}

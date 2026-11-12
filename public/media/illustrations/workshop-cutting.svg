@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" preserveAspectRatio="xMidYMid slice"><defs>
+  <filter id="w" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.018" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="5"/></filter>
+  <filter id="g"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch" seed="7"/><feColorMatrix values="0 0 0 0 0.11  0 0 0 0 0.10  0 0 0 0 0.09  0 0 0 0.09 0"/></filter>
+  <pattern id="h" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="9" stroke="#1c1916" stroke-width="1.2" opacity=".28"/></pattern>
+  <pattern id="hl" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(-30)"><line x1="0" y1="0" x2="0" y2="14" stroke="#fff" stroke-width="2" opacity=".35"/></pattern>
+  <pattern id="weave" width="12" height="12" patternUnits="userSpaceOnUse"><path d="M0 3H12M0 9H12" stroke="#1c1916" stroke-width="1" opacity=".12"/><path d="M3 0V12M9 0V12" stroke="#fff" stroke-width="1" opacity=".10"/></pattern>
+</defs>
+<rect width="800" height="1000" fill="#ece3d3"/>
+<g filter="url(#w)" stroke="#1c1916" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+  <line x1="400" y1="0" x2="400" y2="120" stroke-width="2.5"/><path d="M340 170 L460 170 L430 120 L370 120 Z" fill="#1c1916"/>
+  <path d="M340 170 L460 170" stroke="#c08a2d" stroke-width="5"/>
+  <path d="M370 172 L180 520 L620 520 L430 172 Z" fill="#fff6dc" stroke="none" opacity=".45"/>
+  <path d="M70 420 L730 420 L790 960 L10 960 Z" fill="#cdb48c"/><path d="M70 420 L730 420 L790 960 L10 960 Z" fill="url(#h)" stroke="none" opacity=".5"/>
+  <!-- fabric roll -->
+  <rect x="150" y="360" width="500" height="84" rx="10" fill="#2e3a5c"/><ellipse cx="150" cy="402" rx="22" ry="42" fill="#4a5a85"/><ellipse cx="150" cy="402" rx="8" ry="16" fill="#1c1916"/>
+  <path d="M170 444 L630 444 L680 880 L120 880 Z" fill="#4a5a85"/><path d="M170 444 L630 444 L680 880 L120 880 Z" fill="url(#weave)" stroke="none"/>
+  <!-- chalk pattern of a shirt -->
+  <path d="M300 520 L360 500 Q400 530 440 500 L500 520 L560 600 L520 630 L500 610 L506 800 L294 800 L300 610 L280 630 L240 600 Z" fill="none" stroke="#f4efe6" stroke-dasharray="10 9" stroke-width="3"/>
+  <line x1="400" y1="530" x2="400" y2="790" stroke="#f4efe6" stroke-dasharray="4 10" stroke-width="2"/>
+  <!-- scissors -->
+  <g transform="rotate(-24 590 820)"><circle cx="560" cy="830" r="20" fill="none" stroke-width="5" stroke="#1c1916"/><circle cx="560" cy="880" r="20" fill="none" stroke-width="5"/>
+    <path d="M578 838 L720 860 L582 870 Z" fill="#bfbab2"/><path d="M578 872 L720 860" stroke-width="2"/></g>
+  <!-- tape measure -->
+  <path d="M80 640 Q160 600 200 700 T300 900 L330 896 Q240 720 220 690 Q180 590 90 620 Z" fill="#c08a2d"/>
+  <circle cx="210" cy="560" r="0" /><circle cx="232" cy="560" r="0" /><circle cx="254" cy="560" r="0" /><circle cx="210" cy="550" r="0" /><circle cx="232" cy="550" r="0" /><circle cx="254" cy="550" r="0" /><circle cx="210" cy="540" r="0" /><circle cx="232" cy="540" r="0" /><circle cx="254" cy="540" r="0" />
+  <!-- pins and chalk -->
+  <line x1="470" y1="700" x2="496" y2="690" stroke-width="2"/><circle cx="470" cy="700" r="6" fill="#a4502f"/><line x1="520" y1="740" x2="546" y2="730" stroke-width="2"/><circle cx="520" cy="740" r="6" fill="#a4502f"/><line x1="330" y1="860" x2="356" y2="850" stroke-width="2"/><circle cx="330" cy="860" r="6" fill="#a4502f"/><line x1="610" y1="520" x2="636" y2="510" stroke-width="2"/><circle cx="610" cy="520" r="6" fill="#a4502f"/>
+  <rect x="640" y="660" width="54" height="22" rx="4" fill="#f4efe6" transform="rotate(18 667 671)"/>
+</g>
+<rect width="800" height="1000" filter="url(#g)"/>
+</svg>
