@@ -341,3 +341,29 @@ p { margin: 0 0 1em; }
 .coupon-form input { flex: 1; min-width: 0; border: 0; padding: 10px 12px; outline: none; text-transform: uppercase; }
 .coupon-form button { border: 0; background: none; color: var(--clay); font-weight: 700; padding: 0 14px; }
 .coupon-msg { color: var(--err); font-size: 13px; margin: 8px 0 0; }
+
+/* ===== Account ===== */
+.auth-box { max-width: 440px; margin: 10px auto 40px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #fff; }
+.auth-tabs { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid var(--line); }
+.auth-tabs button { padding: 14px; border: 0; background: var(--paper); font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.auth-tabs button[aria-selected='true'] { background: #fff; color: var(--clay); box-shadow: inset 0 -3px var(--clay); }
+.auth-form { display: grid; gap: 14px; padding: 24px; }
+.auth-form h1 { font-size: 22px; }
+.auth-form p { margin: 0; }
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+.otp-input { font-size: 24px !important; letter-spacing: 10px; text-align: center; font-weight: 700; }
+.account-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.account-head h1 { font-size: 28px; }
+.account-head p { margin: 4px 0 0; }
+.account-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 20px; align-items: start; }
+@media (max-width: 900px) { .account-grid { grid-template-columns: 1fr; } }
+.order-list { display: grid; margin-top: 10px; }
+.order-row { display: grid; grid-template-columns: 56px 1fr auto; gap: 14px; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.order-row:hover b { color: var(--clay); }
+.order-row img { width: 56px; aspect-ratio: 3/4; object-fit: cover; border-radius: 4px; background: var(--sand); }
+.order-row .amt { text-align: right; font-weight: 700; display: grid; }
+.status { display: inline-block; margin-top: 6px; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 10px; background: var(--sand); color: var(--ink-2); }
+.status.s-delivered { background: #e7f5ee; color: var(--ok); }
+.status.s-shipped, .status.s-confirmed, .status.s-packed { background: #e9eef5; color: var(--indigo); }
+.status.s-cancelled, .status.s-rto { background: #fdecea; color: var(--err); }

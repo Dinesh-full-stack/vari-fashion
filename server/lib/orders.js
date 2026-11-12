@@ -160,7 +160,7 @@ function validateCustomer(c = {}) {
  * Create an order and take its stock off sale in one transaction, so two buyers can never
  * both get the last unit. Prepaid orders hold stock until payment arrives or the hold expires.
  */
-function createOrderTx({ items, customer, paymentMethod, couponCode = '' }) {
+function createOrderTx({ items, customer, paymentMethod, couponCode = '', customerId = null }) {
   if (setting('store_open') !== '1') throw new UserError('The store is closed for orders right now. Please try again later.', 503);
   if (!['prepaid', 'cod'].includes(paymentMethod)) throw new UserError('Choose a payment method.');
   if (paymentMethod === 'cod' && setting('cod_enabled') !== '1') throw new UserError('Cash on delivery is not available right now.');
@@ -177,11 +177,11 @@ function createOrderTx({ items, customer, paymentMethod, couponCode = '' }) {
     const holdMins = intSetting('payment_hold_minutes');
     const info = db.prepare(`
       INSERT INTO orders (number, customer_name, phone, email, address_line1, address_line2, city, state, pincode,
-        payment_method, payment_status, status, items_paise, shipping_paise, cod_fee_paise, total_paise, tax_paise, coupon_code, discount_paise, hold_expires_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ${isCod ? 'NULL' : `datetime('now', '+${holdMins} minutes')`})`).run(
+        payment_method, payment_status, status, items_paise, shipping_paise, cod_fee_paise, total_paise, tax_paise, coupon_code, discount_paise, customer_id, hold_expires_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ${isCod ? 'NULL' : `datetime('now', '+${holdMins} minutes')`})`).run(
       number, c.name, c.phone, c.email, c.line1, c.line2, c.city, c.state, c.pincode,
       paymentMethod, isCod ? 'cod_pending' : 'pending', isCod ? 'confirmed' : 'pending_payment',
-      bag.itemsPaise, bag.shippingPaise, bag.codFeePaise, bag.totalPaise, bag.taxPaise, bag.coupon?.code || null, bag.discountPaise,
+      bag.itemsPaise, bag.shippingPaise, bag.codFeePaise, bag.totalPaise, bag.taxPaise, bag.coupon?.code || null, bag.discountPaise, customerId,
     );
     const orderId = Number(info.lastInsertRowid);
     const addItem = db.prepare(`INSERT INTO order_items (order_id, variant_id, product_id, product_name, color, size, sku, hsn,

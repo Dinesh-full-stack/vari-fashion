@@ -74,6 +74,26 @@ export function requireAdmin(req, res, next) {
   next();
 }
 
+/**
+ * What each admin role may do. The owner can do everything; checks happen on the server for every request.
+ *   manager   — runs the shop day to day: everything except settings changes, staff and deleting money entries
+ *   orders    — packing and dispatch: orders, shipping, returns (no refunds), bulk enquiries
+ *   catalogue — products, stock, photos and the homepage
+ */
+export const ROLES = {
+  owner: { label: 'Owner', perms: ['*'] },
+  manager: { label: 'Manager', perms: ['orders', 'returns', 'refunds', 'products', 'homepage', 'coupons', 'enquiries', 'money', 'export', 'settings.view', 'audit', 'sales', 'customers'] },
+  orders: { label: 'Orders staff', perms: ['orders', 'returns', 'enquiries'] },
+  catalogue: { label: 'Catalogue staff', perms: ['products', 'homepage'] },
+};
+export const can = (admin, perm) => {
+  const perms = ROLES[admin?.role]?.perms || [];
+  return perms.includes('*') || perms.includes(perm);
+};
+export const permsFor = (role) => (ROLES[role]?.perms.includes('*')
+  ? [...new Set(Object.values(ROLES).flatMap((r) => r.perms).filter((x) => x !== '*').concat(['settings.edit', 'staff', 'money.delete']))]
+  : ROLES[role]?.perms || []);
+
 export const requireOwner = (req, res, next) =>
   req.admin?.role === 'owner' ? next() : res.status(403).json({ error: 'Only the owner can do this.' });
 

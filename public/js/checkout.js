@@ -1,4 +1,4 @@
-import { boot, api, bag, money, esc, quoteBag } from './common.js';
+import { boot, api, bag, money, esc, quoteBag, getAccount } from './common.js';
 
 const config = await boot();
 const $ = (s, r = document) => r.querySelector(s);
@@ -30,6 +30,18 @@ try {
   const saved = JSON.parse(localStorage.getItem(SAVED) || '{}');
   for (const [k, v] of Object.entries(saved)) if (form.elements[k]) form.elements[k].value = v;
 } catch { /* storage unavailable */ }
+
+// Logged-in customers: fill in their saved details. Guests get a link to log in.
+const account = await getAccount();
+if (account) {
+  const a = account.address || {};
+  const fill = { name: account.name, phone: account.phone, email: account.email, line1: a.line1, line2: a.line2, city: a.city, state: a.state, pincode: a.pincode };
+  for (const [k, v] of Object.entries(fill)) if (v && form.elements[k] && !form.elements[k].value) form.elements[k].value = v;
+  for (const [k, v] of Object.entries(fill)) if (v && form.elements[k] && ['name', 'phone', 'email'].includes(k)) form.elements[k].value = v;
+  $('[data-test-banner]').insertAdjacentHTML('afterend', `<p class="notice ok">Logged in as <b>${esc(account.name)}</b>. This order will appear in <a class="link" href="/account">My account</a>.</p>`);
+} else {
+  $('[data-test-banner]').insertAdjacentHTML('afterend', '<p class="notice">Have an account? <a class="link" href="/account?next=/checkout">Log in</a> for faster checkout, or continue as a guest.</p>');
+}
 
 const method = () => form.elements.pay.value || 'prepaid';
 

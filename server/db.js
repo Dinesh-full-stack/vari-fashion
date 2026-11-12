@@ -148,7 +148,7 @@ CREATE TABLE IF NOT EXISTS admins (
   email TEXT UNIQUE NOT NULL,
   name TEXT NOT NULL,
   password_hash TEXT NOT NULL,
-  role TEXT NOT NULL DEFAULT 'staff' CHECK (role IN ('owner','staff')),
+  role TEXT NOT NULL DEFAULT 'manager' CHECK (role IN ('owner','manager','orders','catalogue')),
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -185,6 +185,51 @@ if (!hasColumn('products', 'size_chart')) db.exec(`ALTER TABLE products ADD COLU
 if (!hasColumn('orders', 'coupon_code')) db.exec(`ALTER TABLE orders ADD COLUMN coupon_code TEXT`);
 if (!hasColumn('orders', 'discount_paise')) db.exec(`ALTER TABLE orders ADD COLUMN discount_paise INTEGER NOT NULL DEFAULT 0`);
 if (!hasColumn('order_items', 'discount_paise')) db.exec(`ALTER TABLE order_items ADD COLUMN discount_paise INTEGER NOT NULL DEFAULT 0`);
+// Admin roles: older databases only allowed 'owner' and 'staff'. Rebuild the table; 'staff' becomes 'manager'.
+if (/'staff'\)/.test(db.prepare(`SELECT sql FROM sqlite_master WHERE name = 'admins'`).get()?.sql || '')) {
+  db.exec('PRAGMA foreign_keys = OFF');
+  db.exec('BEGIN');
+  db.exec(`CREATE TABLE admins_new (
+    id INTEGER PRIMARY KEY, email TEXT UNIQUE NOT NULL, name TEXT NOT NULL, password_hash TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'manager' CHECK (role IN ('owner','manager','orders','catalogue')),
+    created_at TEXT NOT NULL DEFAULT (datetime('now')))`);
+  db.exec(`INSERT INTO admins_new (id, email, name, password_hash, role, created_at)
+    SELECT id, email, name, password_hash, CASE role WHEN 'staff' THEN 'manager' ELSE role END, created_at FROM admins`);
+  db.exec('DROP TABLE admins');
+  db.exec('ALTER TABLE admins_new RENAME TO admins');
+  db.exec('COMMIT');
+  db.exec('PRAGMA foreign_keys = ON');
+}
+
+// Customer accounts (email one-time-code login)
+db.exec(`CREATE TABLE IF NOT EXISTS customers (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL,
+  phone TEXT UNIQUE NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  address TEXT,                  -- JSON of the default delivery address
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  last_login_at TEXT
+)`);
+db.exec(`CREATE TABLE IF NOT EXISTS customer_sessions (
+  id TEXT PRIMARY KEY,
+  customer_id INTEGER NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
+  expires_at TEXT NOT NULL
+)`);
+db.exec(`CREATE TABLE IF NOT EXISTS otp_codes (
+  id INTEGER PRIMARY KEY,
+  email TEXT NOT NULL,
+  code_hash TEXT NOT NULL,
+  purpose TEXT NOT NULL,         -- signup | login
+  payload TEXT NOT NULL DEFAULT '{}',
+  attempts INTEGER NOT NULL DEFAULT 0,
+  used INTEGER NOT NULL DEFAULT 0,
+  expires_at TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+)`);
+db.exec('CREATE INDEX IF NOT EXISTS idx_otp_email ON otp_codes(email)');
+if (!hasColumn('orders', 'customer_id')) db.exec('ALTER TABLE orders ADD COLUMN customer_id INTEGER REFERENCES customers(id)');
+
 db.exec(`CREATE TABLE IF NOT EXISTS email_log (
   id INTEGER PRIMARY KEY,
   to_addr TEXT NOT NULL,

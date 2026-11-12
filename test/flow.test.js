@@ -29,7 +29,7 @@ const customer = { name: 'Test Buyer', phone: '9876543210', email: 'buyer@exampl
 before(async () => {
   for (const f of [DB, DB + '-wal', DB + '-shm']) fs.rmSync(f, { force: true });
   proc = spawn(process.execPath, ['server/index.js'], {
-    env: { ...process.env, PORT: String(PORT), DB_FILE: DB, ADMIN_EMAIL: 'owner@test.local', ADMIN_PASSWORD: 'test-password-123', RAZORPAY_KEY_ID: '', RAZORPAY_KEY_SECRET: '', SHIPROCKET_EMAIL: '' },
+    env: { ...process.env, PORT: String(PORT), DB_FILE: DB, ADMIN_EMAIL: 'owner@test.local', ADMIN_PASSWORD: 'test-password-123', RAZORPAY_KEY_ID: '', RAZORPAY_KEY_SECRET: '', SHIPROCKET_EMAIL: '', RATE_LIMIT_MULTIPLIER: '20' },
     stdio: 'ignore',
   });
   for (let i = 0; i < 40; i++) {
@@ -194,4 +194,92 @@ test('order emails are triggered at each step (logged as skipped without SMTP)',
   assert.deepEqual(kinds, ['new_order_alert', 'order_confirmed', 'order_delivered', 'order_shipped']);
   assert.ok(log.every((m) => m.status === 'skipped'));
   assert.ok(log.find((m) => m.kind === 'order_confirmed').to_addr === 'mail@test.local');
+});
+
+test('customer accounts: sign up and log in with an emailed code, orders linked', async () => {
+  let jar = '';
+  const call = async (method, url, body) => {
+    const res = await fetch(BASE + url, { method, headers: { 'Content-Type': 'application/json', ...(jar ? { Cookie: jar } : {}) }, body: body ? JSON.stringify(body) : undefined });
+    const sc = res.headers.get('set-cookie');
+    if (sc) jar = sc.split(';')[0].endsWith('=') ? '' : sc.split(';')[0];
+    return { status: res.status, data: await res.json().catch(() => ({})) };
+  };
+  const person = { name: 'Asha K', phone: '9012345678', email: 'asha@test.local' };
+
+  assert.equal((await call('GET', '/api/account/me')).data, null, 'guest');
+  const start = await call('POST', '/api/account/signup', person);
+  assert.equal(start.status, 200, JSON.stringify(start.data));
+  assert.match(start.data.devCode, /^\d{6}$/, 'test mode returns the code');
+  const wrong = await call('POST', '/api/account/verify', { email: person.email, code: start.data.devCode === '000000' ? '111111' : '000000', purpose: 'signup' });
+  assert.equal(wrong.status, 400);
+  assert.match(wrong.data.error, /4 tries left/);
+  const ok = await call('POST', '/api/account/verify', { email: person.email, code: start.data.devCode, purpose: 'signup' });
+  assert.equal(ok.status, 200, JSON.stringify(ok.data));
+  assert.equal((await call('GET', '/api/account/me')).data.email, person.email);
+  assert.equal((await call('POST', '/api/account/verify', { email: person.email, code: start.data.devCode, purpose: 'signup' })).status, 400, 'code works once');
+  assert.equal((await call('POST', '/api/account/signup', person)).status, 400, 'duplicate account');
+
+  // Order while logged in -> appears in My orders, address remembered
+  const products = (await api('GET', '/api/products')).data;
+  const v = products.flatMap((p) => p.variants).find((x) => x.available && x.low === null);
+  const order = await call('POST', '/api/checkout', { items: [{ variantId: v.id, qty: 1 }], customer: { ...customer, ...person }, paymentMethod: 'cod' });
+  assert.equal(order.status, 200, JSON.stringify(order.data));
+  const mine = (await call('GET', '/api/account/orders')).data;
+  assert.equal(mine.length, 1);
+  assert.equal(mine[0].number, order.data.order.number);
+  assert.equal((await call('GET', '/api/account/me')).data.address.pincode, customer.pincode);
+  const detail = await call('GET', `/api/account/orders/${order.data.order.number}`);
+  assert.equal(detail.status, 200);
+  assert.equal(detail.data.phone, person.phone);
+
+  // Someone else's order is not visible
+  const other = await api('POST', '/api/checkout', { items: [{ variantId: v.id, qty: 1 }], customer: { ...customer, phone: '9333333333' }, paymentMethod: 'cod' });
+  assert.equal((await call('GET', `/api/account/orders/${other.data.order.number}`)).status, 404);
+
+  // Log out, log back in
+  await call('POST', '/api/account/logout', {});
+  assert.equal((await call('GET', '/api/account/me')).data, null);
+  assert.equal((await call('POST', '/api/account/login', { email: 'nobody@test.local' })).status, 400);
+  const login = await call('POST', '/api/account/login', { email: person.email });
+  const back = await call('POST', '/api/account/verify', { email: person.email, code: login.data.devCode, purpose: 'login' });
+  assert.equal(back.status, 200);
+  assert.equal((await call('GET', '/api/account/orders')).data.length, 1);
+});
+
+test('staff roles: each role is limited to its own pages', async () => {
+  assert.equal((await api('POST', '/api/admin/login', { email: 'owner@test.local', password: 'test-password-123' })).status, 200);
+  for (const role of ['orders', 'catalogue', 'manager']) {
+    const r = await api('POST', '/api/admin/staff', { name: role, email: `${role}@test.local`, password: 'staff-password-1', role }, { admin: true });
+    assert.equal(r.status, 200, JSON.stringify(r.data));
+  }
+  const as = async (role) => { cookie = ''; assert.equal((await api('POST', '/api/admin/login', { email: `${role}@test.local`, password: 'staff-password-1' })).status, 200); };
+  const code = async (method, url, body) => (await api(method, url, body ?? (method === 'GET' ? null : {}), { admin: true })).status;
+
+  await as('orders');
+  assert.equal(await code('GET', '/api/admin/orders'), 200);
+  assert.equal(await code('GET', '/api/admin/returns'), 200);
+  assert.equal(await code('GET', '/api/admin/products'), 403);
+  assert.equal(await code('GET', '/api/admin/settings'), 403);
+  assert.equal(await code('GET', '/api/admin/ledger'), 403);
+  assert.equal(await code('GET', '/api/admin/export/orders.csv'), 403);
+  const dash = (await api('GET', '/api/admin/dashboard', null, { admin: true })).data;
+  assert.equal(dash.showSales, false);
+  assert.equal(dash.money, null, 'no money figures for orders staff');
+
+  await as('catalogue');
+  assert.equal(await code('GET', '/api/admin/products'), 200);
+  assert.equal(await code('GET', '/api/admin/homepage'), 200);
+  assert.equal(await code('GET', '/api/admin/orders'), 403);
+  assert.equal(await code('GET', '/api/admin/coupons'), 403);
+
+  await as('manager');
+  assert.equal(await code('GET', '/api/admin/orders'), 200);
+  assert.equal(await code('GET', '/api/admin/coupons'), 200);
+  assert.equal(await code('GET', '/api/admin/customers'), 200);
+  assert.equal(await code('GET', '/api/admin/settings'), 200);
+  assert.equal(await code('PUT', '/api/admin/settings', { brand_name: 'X' }), 403);
+  assert.equal(await code('GET', '/api/admin/staff'), 403);
+
+  cookie = '';
+  assert.equal((await api('POST', '/api/admin/login', { email: 'owner@test.local', password: 'test-password-123' })).status, 200);
 });

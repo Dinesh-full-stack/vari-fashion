@@ -18,6 +18,10 @@ export async function api(path, { method = 'GET', body } = {}) {
 let configPromise;
 export const getConfig = () => (configPromise ||= api('/api/config'));
 
+// The logged-in customer, or null for guests.
+let accountPromise;
+export const getAccount = () => (accountPromise ||= api('/api/account/me').catch(() => null));
+
 // ---------- Bag (stored in this browser; prices are re-checked by the server) ----------
 const KEY = 'bag.v1';
 const read = () => { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { return []; } };
@@ -61,6 +65,7 @@ const ICON = {
   search: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
   bag: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>',
   truck: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 6h11v10H3zM14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>',
+  user: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>',
   menu: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>',
 };
 const logoHtml = (brand) => { const [a, ...b] = String(brand).split(' '); return `<b>${esc(a)}</b>${b.length ? `<span>${esc(b.join(' '))}</span>` : ''}`; };
@@ -84,6 +89,7 @@ function header(c) {
       <input name="q" type="search" placeholder="Search shirts, kurtas, dresses…" aria-label="Search products" value="${esc(params.get('q') || '')}">
     </form>
     <div class="h-icons">
+      <a class="icon-btn" href="/account" data-account-link>${ICON.user}<small>Log in</small></a>
       <a class="icon-btn hide-sm" href="/track">${ICON.truck}<small>Track</small></a>
       <button class="icon-btn" data-open-bag aria-label="Open bag">${ICON.bag}<small>Bag</small><span class="bag-count" data-bag-count></span></button>
     </div>
@@ -113,7 +119,7 @@ function mobileNav() {
   el.className = 'mobile-nav';
   el.setAttribute('aria-label', 'Mobile');
   el.innerHTML = `<div class="mn-head"><b>Menu</b><button class="close" aria-label="Close menu">×</button></div>
-    ${NAV.map(([h, t]) => `<a href="${h}">${esc(t)}</a>`).join('')}<hr><a href="/track">Track order</a><a href="/bulk">Bulk orders</a>`;
+    ${NAV.map(([h, t]) => `<a href="${h}">${esc(t)}</a>`).join('')}<hr><a href="/account">My account</a><a href="/track">Track order</a><a href="/bulk">Bulk orders</a>`;
   const back = Object.assign(document.createElement('div'), { className: 'drawer-backdrop' });
   document.body.append(back, el);
   const btn = document.querySelector('[data-menu]');
@@ -262,6 +268,10 @@ export async function boot() {
     h.innerHTML = header(c);
     headerScroll(h);
     mobileNav();
+    getAccount().then((me) => {
+      const a = h.querySelector('[data-account-link] small');
+      if (me && a) { a.textContent = me.name.split(' ')[0].slice(0, 10); a.parentElement.setAttribute('aria-label', 'My account'); }
+    });
   }
   const f = document.getElementById('site-footer');
   if (f) { f.className = 'site-footer'; f.innerHTML = footer(c); }

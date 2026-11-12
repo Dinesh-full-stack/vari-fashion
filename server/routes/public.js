@@ -11,6 +11,9 @@ import { trackAwb, mapShiprocketStatus } from '../lib/shiprocket.js';
 import { renderInvoice, invoiceToken, verifyInvoiceToken } from '../lib/invoice.js';
 import { placeholderSvg } from '../lib/placeholder.js';
 import { getHomepage } from '../lib/homepage.js';
+import {
+  startSignup, startLogin, verifyCode, currentCustomer, endCustomerSession, requireCustomer, publicCustomer, updateProfile, rememberAddress,
+} from '../lib/customers.js';
 import { rateLimit } from '../lib/ratelimit.js';
 
 export const router = express.Router();
@@ -137,7 +140,9 @@ const checkoutLimiter = rateLimit({ windowMs: 60000, max: 10 });
 
 router.post('/api/checkout', checkoutLimiter, wrap(async (req, res) => {
   const { items, customer, paymentMethod, couponCode } = req.body || {};
-  const order = createOrder({ items, customer, paymentMethod, couponCode });
+  const account = currentCustomer(req);
+  const order = createOrder({ items, customer, paymentMethod, couponCode, customerId: account?.id || null });
+  if (account) rememberAddress(account.id, order);
   if (order.payment_method === 'cod') {
     return res.json({ order: { number: order.number, total: order.total_paise }, payment: { mode: 'cod' } });
   }
@@ -198,14 +203,14 @@ function findCustomerOrder(number, phone) {
   return order;
 }
 
-router.post('/api/track', lookupLimiter, wrap(async (req, res) => {
-  const order = findCustomerOrder(req.body?.number, req.body?.phone);
+/** Everything the tracking page shows for one order. */
+async function trackView(order) {
   const items = getOrderItems(order.id);
   const returns = db.prepare('SELECT number, type, status, refund_paise, items, created_at, updated_at FROM returns WHERE order_id = ? ORDER BY id').all(order.id);
   const days = intSetting('return_window_days');
   const deliveredMs = order.delivered_at ? Date.parse(order.delivered_at.replace(' ', 'T') + 'Z') : null;
   const returnBy = deliveredMs ? new Date(deliveredMs + days * 86400000).toISOString() : null;
-  res.json({
+  return {
     number: order.number,
     status: order.status,
     statusLabel: STATUS_LABEL[order.status],
@@ -227,7 +232,49 @@ router.post('/api/track', lookupLimiter, wrap(async (req, res) => {
     returnBy,
     canReturn: order.status === 'delivered' && returnBy && Date.now() < Date.parse(returnBy),
     invoiceUrl: order.invoice_no ? `/invoice/${order.number}?t=${invoiceToken(order.number)}` : null,
-  });
+  };
+}
+
+router.post('/api/track', lookupLimiter, wrap(async (req, res) => {
+  res.json(await trackView(findCustomerOrder(req.body?.number, req.body?.phone)));
+}));
+
+// ---- Customer accounts ----
+
+const otpLimiter = rateLimit({ windowMs: 15 * 60000, max: 10, message: 'Too many attempts. Please wait a few minutes.' });
+
+router.post('/api/account/signup', otpLimiter, wrap(async (req, res) => res.json({ ok: true, ...(await startSignup(req.body || {})) })));
+router.post('/api/account/login', otpLimiter, wrap(async (req, res) => res.json({ ok: true, ...(await startLogin(req.body || {})) })));
+router.post('/api/account/verify', otpLimiter, (req, res) => res.json(verifyCode(res, req.body || {})));
+router.post('/api/account/logout', (req, res) => { endCustomerSession(req, res); res.json({ ok: true }); });
+router.get('/api/account/me', (req, res) => {
+  const c = currentCustomer(req);
+  res.set('Cache-Control', 'no-store');
+  res.json(c ? publicCustomer(c) : null);
+});
+router.put('/api/account/me', requireCustomer, (req, res) => res.json(updateProfile(req.customer, req.body)));
+
+const ownedOrder = (customer, number) => {
+  const o = getOrderByNumber(number);
+  if (!o || o.customer_id !== customer.id) throw new UserError('Order not found.', 404);
+  return o;
+};
+router.get('/api/account/orders', requireCustomer, (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  const rows = db.prepare(`SELECT id, number, status, payment_method, total_paise, created_at FROM orders
+    WHERE customer_id = ? AND NOT (status = 'cancelled' AND payment_status = 'failed') ORDER BY id DESC LIMIT 100`).all(req.customer.id);
+  const firstItem = db.prepare(`SELECT oi.product_name, p.silhouette, v.color_hex, (SELECT SUM(qty) FROM order_items WHERE order_id = ?) AS pieces
+    FROM order_items oi JOIN products p ON p.id = oi.product_id JOIN variants v ON v.id = oi.variant_id WHERE oi.order_id = ? LIMIT 1`);
+  res.json(rows.map((o) => {
+    const it = firstItem.get(o.id, o.id) || {};
+    return { number: o.number, status: o.status, statusLabel: STATUS_LABEL[o.status], paymentMethod: o.payment_method, total: o.total_paise, createdAt: o.created_at,
+      title: it.product_name || '', pieces: it.pieces || 0, image: it.silhouette ? `/img/ph/${it.silhouette}/${String(it.color_hex).replace('#', '')}.svg` : '' };
+  }));
+});
+router.get('/api/account/orders/:number', requireCustomer, wrap(async (req, res) => {
+  const o = ownedOrder(req.customer, req.params.number);
+  res.set('Cache-Control', 'no-store');
+  res.json({ ...(await trackView(o)), phone: o.phone });
 }));
 
 router.post('/api/returns', lookupLimiter, (req, res) => {

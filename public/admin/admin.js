@@ -86,19 +86,23 @@ function renderLogin() {
 }
 
 // ---------------- Shell ----------------
+// [route, label, badge counter, permission needed (null = everyone)]
 const NAV = [
-  ['dashboard', 'Dashboard'], ['orders', 'Orders', 'toShip'], ['returns', 'Returns', 'pendingReturns'], ['products', 'Products'], ['homepage', 'Homepage'], ['coupons', 'Coupons'],
-  ['enquiries', 'Bulk enquiries', 'newEnquiries'], ['money', 'Money'], ['settings', 'Settings'], ['staff', 'Staff & security'], ['activity', 'Activity log'],
+  ['dashboard', 'Dashboard', null, null], ['orders', 'Orders', 'toShip', 'orders'], ['returns', 'Returns', 'pendingReturns', 'returns'],
+  ['products', 'Products', null, 'products'], ['homepage', 'Homepage', null, 'homepage'], ['coupons', 'Coupons', null, 'coupons'],
+  ['customers', 'Customers', null, 'customers'], ['enquiries', 'Bulk enquiries', 'newEnquiries', 'enquiries'], ['money', 'Money', null, 'money'],
+  ['settings', 'Settings', null, 'settings.view'], ['staff', 'Staff & security', null, null], ['activity', 'Activity log', null, 'audit'],
 ];
+const can = (perm) => !perm || me?.perms?.includes(perm);
 
 function shell() {
   root.innerHTML = `<div class="app">
     <nav class="side" data-side aria-label="Admin">
       <div class="brand" data-brand>Admin</div>
-      ${NAV.map(([k, l, c]) => `<a href="#${k}" data-nav="${k}">${l}${c ? `<span class="badge" data-count="${c}" hidden></span>` : ''}</a>`).join('')}
+      ${NAV.filter(([, , , perm]) => can(perm)).map(([k, l, c]) => `<a href="#${k}" data-nav="${k}">${l}${c ? `<span class="badge" data-count="${c}" hidden></span>` : ''}</a>`).join('')}
       <div class="grow"></div>
       <a href="/" target="_blank">View store ↗</a>
-      <div class="me">${esc(me.name)} · ${esc(me.role)}<br><button data-logout>Sign out</button></div>
+      <div class="me">${esc(me.name)} · ${esc(me.roleLabel || me.role)}<br><button data-logout>Sign out</button></div>
     </nav>
     <div class="main">
       <div class="topbar"><div class="actions"><button class="btn sec menu-toggle" data-menu>☰</button><h1 data-title></h1></div>
@@ -127,7 +131,9 @@ async function route() {
   $$('[data-nav]').forEach((a) => a.classList.toggle('on', a.dataset.nav === name || (name === 'order' && a.dataset.nav === 'orders') || (name === 'product' && a.dataset.nav === 'products')));
   $('[data-side]')?.classList.remove('open');
   view().innerHTML = '<p class="muted">Loading…</p>';
-  const pages = { dashboard, orders, order, products, product, homepage, coupons, returns, enquiries, money: moneyPage, settings, staff, activity };
+  const navFor = (n) => NAV.find(([k]) => k === (n === 'order' ? 'orders' : n === 'product' ? 'products' : n));
+  if (!can(navFor(name)?.[3])) { view().innerHTML = '<div class="msg warn">Your role doesn’t include this page. Ask the owner if you need access.</div>'; return; }
+  const pages = { dashboard, orders, order, products, product, homepage, coupons, customers, returns, enquiries, money: moneyPage, settings, staff, activity };
   try { await (pages[name] || dashboard)(decodeURIComponent(arg || '')); }
   catch (e) { if (e.message !== 'Signed out') view().innerHTML = `<div class="msg err">${esc(e.message)}</div>`; }
   refreshCounts();
@@ -142,14 +148,15 @@ async function dashboard() {
   const a = d.actions;
   view().innerHTML = `
     <div class="tiles">
-      ${actionTile('Ready to ship', a.toShip, '#orders?status=to_ship', a.toShip > 0)}
-      ${actionTile('Returns to handle', a.pendingReturns, '#returns', a.pendingReturns > 0)}
-      ${actionTile('Refunds needed', a.needsRefund, '#orders?status=needs_refund', a.needsRefund > 0)}
-      ${actionTile('In transit', a.inTransit, '#orders?status=shipped')}
-      ${actionTile('Awaiting payment', a.awaitingPayment, '#orders?status=pending_payment')}
-      ${actionTile('New bulk enquiries', a.newEnquiries, '#enquiries', a.newEnquiries > 0)}
+      ${can('orders') ? actionTile('Ready to ship', a.toShip, '#orders?status=to_ship', a.toShip > 0) : ''}
+      ${can('returns') ? actionTile('Returns to handle', a.pendingReturns, '#returns', a.pendingReturns > 0) : ''}
+      ${can('refunds') ? actionTile('Refunds needed', a.needsRefund, '#orders?status=needs_refund', a.needsRefund > 0) : ''}
+      ${can('orders') ? actionTile('In transit', a.inTransit, '#orders?status=shipped') : ''}
+      ${can('orders') ? actionTile('Awaiting payment', a.awaitingPayment, '#orders?status=pending_payment') : ''}
+      ${can('enquiries') ? actionTile('New bulk enquiries', a.newEnquiries, '#enquiries', a.newEnquiries > 0) : ''}
+      ${can('products') ? actionTile('Low-stock sizes', d.lowStock.length, '#products', d.lowStock.length > 0) : ''}
     </div>
-
+${d.showSales ? `
     <div class="panel">
       <div class="panel-head"><div><h2>Sales</h2><p>Orders placed in the last ${d.days} days (excludes unpaid and cancelled)</p></div>
         <div class="actions">${[7, 30, 90].map((n) => `<button class="btn small ${n === d.days ? '' : 'sec'}" data-days="${n}">${n} days</button>`).join('')}</div></div>
@@ -161,10 +168,10 @@ async function dashboard() {
         ${tile('Return rate', pct(d.rates.returns), `of ${d.rates.delivered} delivered orders`)}
       </div>
       ${salesChart(d.daily, d.days)}
-    </div>
+    </div>` : ''}
 
-    <div class="grid cols-2">
-      <div class="panel">
+    <div class="grid ${d.showSales ? 'cols-2' : ''}">
+      ${d.showSales ? `<div class="panel">
         <div class="panel-head"><div><h2>Money due to you (estimate)</h2><p>Not your bank balance. Each line comes from a different source.</p></div><a class="btn small sec" href="#money">Record a payout</a></div>
         <div class="money-line"><span>Waiting at payment gateway</span><b>${money(d.money.gatewayPending)}</b>
           <span class="src">Prepaid sales − refunds − estimated fees (${d.money.feeRatePct}%, ${money(d.money.gatewayFees)}) − settlements you recorded. Last settlement recorded: ${day(d.money.lastSettlement)}. Check the Razorpay dashboard for the exact figure.</span></div>
@@ -174,18 +181,18 @@ async function dashboard() {
           <span class="src">Approved or received returns not yet refunded, plus paid orders that need a refund.</span></div>
         <div class="money-line"><span>Paid out to your bank so far</span><b>${money(d.money.paidToBank)}</b>
           <span class="src">Sum of settlements and remittances recorded on the Money page.</span></div>
-      </div>
-      <div class="panel">
+      </div>` : ''}
+      ${can('products') || d.showSales ? `<div class="panel">
         <div class="panel-head"><h2>Low stock</h2><a class="btn small sec" href="#products">Update stock</a></div>
         ${d.lowStock.length ? `<div class="table-wrap"><table class="t"><thead><tr><th>Product</th><th>Variant</th><th class="num">Left</th></tr></thead><tbody>
           ${d.lowStock.map((s) => `<tr><td>${esc(s.name)}</td><td>${esc(s.color)} / ${esc(s.size)}</td><td class="num">${s.stock === 0 ? '<span class="pill err">0</span>' : s.stock}</td></tr>`).join('')}
         </tbody></table></div>` : '<p class="muted">Everything has more than 3 in stock.</p>'}
-        <h2 style="margin-top:20px">Top products (${d.days} days)</h2>
-        ${d.topProducts.length ? `<table class="t"><tbody>${d.topProducts.map((t) => `<tr><td>${esc(t.name)}</td><td class="num">${t.units} sold</td><td class="num">${money(t.sales)}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">No sales yet.</p>'}
-      </div>
+        ${d.showSales ? `<h2 style="margin-top:20px">Top products (${d.days} days)</h2>
+        ${d.topProducts.length ? `<table class="t"><tbody>${d.topProducts.map((t) => `<tr><td>${esc(t.name)}</td><td class="num">${t.units} sold</td><td class="num">${money(t.sales)}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">No sales yet.</p>'}` : ''}
+      </div>` : ''}
     </div>`;
   $$('[data-days]').forEach((b) => { b.onclick = () => { sessionStorage.setItem('dash.days', b.dataset.days); dashboard(); }; });
-  bindChart();
+  if (d.showSales) bindChart();
 }
 
 const tile = (k, v, s = '') => `<div class="tile"><div class="k">${esc(k)}</div><div class="v">${v}</div>${s ? `<div class="s">${esc(s)}</div>` : ''}</div>`;
@@ -273,7 +280,7 @@ async function orders() {
     <div class="panel-head">
       <div class="tabs">${TABS.map(([k, l]) => `<a href="#orders?status=${k}" class="${k === status ? 'on' : ''}">${l}</a>`).join('')}</div>
       <form class="actions" data-search><input class="inp" name="q" value="${esc(search)}" placeholder="Order no, name, phone, AWB" style="width:240px"><button class="btn sec">Search</button>
-        <a class="btn sec" href="/api/admin/export/orders.csv">Export CSV</a></form>
+        ${can('export') ? '<a class="btn sec" href="/api/admin/export/orders.csv">Export CSV</a>' : ''}</form>
     </div>
     <div class="table-wrap"><table class="t"><thead><tr><th>Order</th><th>Date</th><th>Customer</th><th>Payment</th><th>Status</th><th class="num">Total</th></tr></thead><tbody>
       ${d.rows.map((o) => `<tr class="click" data-href="#order/${esc(o.number)}"><td><b>${esc(o.number)}</b>${o.awb ? `<div class="mono muted">${esc(o.awb)}</div>` : ''}</td>
@@ -302,7 +309,7 @@ async function order(number) {
       <div class="panel">
         <div class="panel-head"><div class="actions">${pill(STATUS, o.status)} ${pill(PAY, o.payment_status)} <span class="muted">${o.payment_method === 'cod' ? 'Cash on delivery' : 'Prepaid'} · ${when(o.created_at)}</span></div>
           ${o.invoiceUrl ? `<a class="btn small sec" href="${esc(o.invoiceUrl)}" target="_blank">Invoice ${esc(o.invoice_no)}</a>` : ''}</div>
-        ${o.payment_status === 'paid_needs_refund' ? `<div class="msg err">This order was paid but cannot be fulfilled. Refund ${money(o.total_paise - o.refunded_paise)}. <button class="btn small" data-refund>Refund now</button></div>` : ''}
+        ${o.payment_status === 'paid_needs_refund' ? `<div class="msg err">This order was paid but cannot be fulfilled. Refund ${money(o.total_paise - o.refunded_paise)}. ${can('refunds') ? '<button class="btn small" data-refund>Refund now</button>' : '(Ask the owner or a manager to refund it.)'}</div>` : ''}
         <div class="actions" style="margin-bottom:6px">
           ${canShip ? `<button class="btn" data-ship>Create shipment${me.shippingLive ? ' (Shiprocket)' : ' (test)'}</button>` : ''}
           ${o.next.filter((s) => !(s === 'shipped' && canShip)).map((s) => `<button class="btn ${s === 'cancelled' || s === 'rto' ? 'danger' : 'sec'}" data-status="${s}">${NEXT_LABEL[s] || s}</button>`).join('')}
@@ -517,7 +524,7 @@ function returnCard(r) {
     received: r.type === 'refund'
       ? `<label class="f" style="width:130px">Refund (₹)<input name="amount" type="number" value="${r.refund_paise / 100}" max="${r.refund_paise / 100}"></label>
          ${r.payment_method === 'cod' ? `<label class="f" style="width:220px">UPI transaction ref<input name="reference" placeholder="after sending to ${esc(r.refund_upi)}"></label>` : ''}
-         <button class="btn" data-act="refund">${r.payment_method === 'cod' ? 'Record UPI refund' : 'Refund via Razorpay'}</button>`
+         ${can('refunds') ? `<button class="btn" data-act="refund">${r.payment_method === 'cod' ? 'Record UPI refund' : 'Refund via Razorpay'}</button>` : '<span class="muted">Waiting for the owner or a manager to refund.</span>'}`
       : `<label class="f" style="width:200px">New shipment AWB (optional)<input name="reference"></label><button class="btn" data-act="exchange">Mark exchange sent</button>`,
   }[r.status] || '';
   return `<div class="panel" data-ret="${esc(r.number)}">
@@ -833,19 +840,33 @@ async function settings() {
 }
 
 // ---------------- Staff ----------------
+const ROLE_INFO = {
+  owner: ['Owner', 'Everything, including settings, staff and money.'],
+  manager: ['Manager', 'Runs the shop: orders, refunds, products, homepage, coupons, customers, money. Not settings or staff.'],
+  orders: ['Orders staff', 'Orders, shipping, returns and bulk enquiries. No refunds, prices or money.'],
+  catalogue: ['Catalogue staff', 'Products, stock, photos and the homepage only.'],
+};
+
 async function staff() {
   title('Staff & security');
-  const list = await api('/staff');
   const owner = me.role === 'owner';
+  const list = can('staff') ? await api('/staff') : [];
+  const roleSelect = (name, value, attrs = '') => `<select class="inp" name="${name}" ${attrs}>${['manager', 'orders', 'catalogue'].map((r) => `<option value="${r}" ${r === value ? 'selected' : ''}>${ROLE_INFO[r][0]}</option>`).join('')}</select>`;
   view().innerHTML = `<div class="grid cols-2">
-    <div class="panel"><h2 style="margin-bottom:10px">People with access</h2>
-      <table class="t"><tbody>${list.map((a) => `<tr><td><b>${esc(a.name)}</b><div class="muted">${esc(a.email)}</div></td><td><span class="pill ${a.role === 'owner' ? 'info' : ''}">${a.role}</span></td>
-        <td>${owner && a.role !== 'owner' ? `<button class="btn small danger" data-rm="${a.id}">Remove</button>` : ''}</td></tr>`).join('')}</tbody></table>
-      ${owner ? `<h2 style="margin:20px 0 10px">Add staff</h2><form class="grid" data-add style="gap:10px">
+    ${owner ? `<div class="panel"><h2 style="margin-bottom:10px">People with access</h2>
+      <table class="t"><tbody>${list.map((a) => `<tr><td><b>${esc(a.name)}</b><div class="muted">${esc(a.email)}</div></td>
+        <td>${a.role === 'owner' ? '<span class="pill info">Owner</span>' : roleSelect('role', a.role, `data-role="${a.id}" style="min-height:32px"`)}</td>
+        <td>${a.role !== 'owner' ? `<button class="btn small danger" data-rm="${a.id}">Remove</button>` : ''}</td></tr>`).join('')}</tbody></table>
+      <h2 style="margin:20px 0 10px">Add staff</h2><form class="grid" data-add style="gap:10px">
         <label class="f">Name<input name="name" required></label><label class="f">Email<input name="email" type="email" required></label>
+        <label class="f">Role${roleSelect('role', 'orders')}</label>
         <label class="f">Temporary password<input name="password" type="text" minlength="10" required><small>Share it privately; they should change it after signing in.</small></label>
-        <div data-err></div><button class="btn">Add staff</button></form>` : ''}
-      <p class="muted" style="font-size:12px;margin-top:14px">Staff can manage orders, returns, products and stock. Only the owner can change settings, staff and delete money entries.</p></div>
+        <div data-err></div><button class="btn">Add staff</button></form>
+      <h2 style="margin:22px 0 8px">What each role can do</h2>
+      <table class="t"><tbody>${Object.values(ROLE_INFO).map(([l, d]) => `<tr><td style="white-space:nowrap"><b>${l}</b></td><td class="muted">${d}</td></tr>`).join('')}</tbody></table>
+      <p class="muted" style="font-size:12px;margin-top:10px">Changing someone's role signs them out, so the new access applies straight away.</p></div>`
+    : `<div class="panel"><h2 style="margin-bottom:8px">Your access</h2><p><span class="pill info">${esc(ROLE_INFO[me.role]?.[0] || me.role)}</span></p><p class="muted">${esc(ROLE_INFO[me.role]?.[1] || '')}</p>
+      <p class="muted" style="font-size:13px">Need more access? Ask the owner.</p></div>`}
     <div class="panel"><h2 style="margin-bottom:10px">Change your password</h2>
       <form class="grid" data-pw style="gap:10px"><label class="f">Current password<input name="current" type="password" required autocomplete="current-password"></label>
       <label class="f">New password<input name="next" type="password" minlength="10" required autocomplete="new-password"><small>At least 10 characters</small></label>
@@ -855,12 +876,34 @@ async function staff() {
     try { await api('/staff', { method: 'POST', body: Object.fromEntries(new FormData(e.target)) }); toast('Staff added'); route(); }
     catch (ex) { errMsg($('[data-err]', e.target), ex); }
   });
+  $$('[data-role]').forEach((sel) => {
+    sel.onchange = async () => {
+      try { await api(`/staff/${sel.dataset.role}`, { method: 'PUT', body: { role: sel.value } }); toast(`Role changed to ${ROLE_INFO[sel.value][0]}`); }
+      catch (ex) { toast(ex.message); route(); }
+    };
+  });
   $$('[data-rm]').forEach((b) => { b.onclick = async () => { if (confirm('Remove this person\'s access?')) { await api(`/staff/${b.dataset.rm}`, { method: 'DELETE' }); route(); } }; });
   $('[data-pw]').addEventListener('submit', async (e) => {
     e.preventDefault();
     try { await api('/password', { method: 'POST', body: Object.fromEntries(new FormData(e.target)) }); toast('Password changed'); e.target.reset(); }
     catch (ex) { errMsg($('[data-err]', e.target), ex); }
   });
+}
+
+// ---------------- Customers ----------------
+async function customers() {
+  title('Customers');
+  const q = new URLSearchParams(location.hash.split('?')[1] || '').get('q') || '';
+  const list = await api(`/customers?q=${encodeURIComponent(q)}`);
+  view().innerHTML = `<div class="panel">
+    <div class="panel-head"><p>${list.length} customer account${list.length === 1 ? '' : 's'}. Guests who check out without an account are not listed here.</p>
+      <form class="actions" data-search><input class="inp" name="q" value="${esc(q)}" placeholder="Name, phone or email" style="width:240px"><button class="btn sec">Search</button></form></div>
+    <div class="table-wrap"><table class="t"><thead><tr><th>Name</th><th>Contact</th><th>Joined</th><th>Last login</th><th class="num">Orders</th><th class="num">Spent</th></tr></thead><tbody>
+    ${list.map((c) => `<tr class="click" data-href="#orders?q=${encodeURIComponent(c.phone)}"><td><b>${esc(c.name)}</b></td><td>${esc(c.phone)}<div class="muted">${esc(c.email)}</div></td>
+      <td>${day(c.created_at)}</td><td>${c.last_login_at ? when(c.last_login_at) : '—'}</td><td class="num">${c.orders}</td><td class="num">${money(c.spent)}</td></tr>`).join('')
+      || '<tr><td colspan="6" class="muted">No customer accounts yet.</td></tr>'}
+    </tbody></table></div></div>`;
+  $('[data-search]').onsubmit = (e) => { e.preventDefault(); location.hash = `customers?q=${encodeURIComponent(e.target.q.value)}`; };
 }
 
 // ---------------- Activity ----------------

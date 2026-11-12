@@ -82,6 +82,21 @@ Every email, whether sent, failed or skipped, is listed in the email log under S
 - **Admin › Homepage:** top message strip, offer banners, promo tiles, and section headings and visibility.
 - Photos are shrunk in the browser before upload (longest side 1600 px, WebP), so the shop stays fast.
 
+## Customer accounts and staff roles
+
+**Customers** can shop as guests, or create an account at `/account`. To sign up they enter their name, mobile number and email; a 6-digit code is emailed to them, and entering it creates the account. Later logins use email + code, so there are no passwords. Signed-in customers get **My orders** (track and return without the phone number), a saved delivery address and checkout filled in for them. Earlier guest orders with the same email and phone are added to the account at sign-up. Until email (SMTP) is set up, the code is shown on screen in test mode; in production the login is switched off instead.
+
+**Staff roles** (Admin › Staff & security; only the owner can change them):
+
+| Role | Can use |
+|---|---|
+| Owner | Everything |
+| Manager | Orders, refunds, returns, products, homepage, coupons, customers, money, activity log, and can view settings. Cannot change settings or staff. |
+| Orders staff | Orders, shipping, returns (no refunds) and bulk enquiries. No sales or money figures. |
+| Catalogue staff | Products, stock, photos and the homepage |
+
+Permissions are checked by the server on every admin request. A route not listed in the permission table is owner-only by default.
+
 ## Deploy on an India VPS (about ₹400–550/month)
 
 Any 1 vCPU / 1 GB Ubuntu server in Mumbai or Bangalore is enough.

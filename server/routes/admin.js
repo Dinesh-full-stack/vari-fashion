@@ -6,7 +6,7 @@ import multer from 'multer';
 import { db, tx, getSettings, intSetting, audit } from '../db.js';
 import { config, paymentsLive, shippingLive } from '../config.js';
 import {
-  requireAdmin, requireOwner, startSession, endSession, currentAdmin, verifyPassword, hashPassword,
+  requireAdmin, requireOwner, can, permsFor, ROLES, startSession, endSession, currentAdmin, verifyPassword, hashPassword,
   loginThrottled, noteLoginFailure, clearLoginFailures,
 } from '../lib/auth.js';
 import { loadProducts, loadProduct } from '../lib/catalog.js';
@@ -49,10 +49,34 @@ router.post('/logout', (req, res) => { endSession(req, res); res.json({ ok: true
 router.get('/me', (req, res) => {
   const admin = currentAdmin(req);
   if (!admin) return res.status(401).json({ error: 'Please sign in.' });
-  res.json({ ...admin, paymentsLive, shippingLive, mailLive: mailLive() });
+  res.json({ ...admin, roleLabel: ROLES[admin.role]?.label, perms: permsFor(admin.role), paymentsLive, shippingLive, mailLive: mailLive() });
 });
 
 router.use(requireAdmin);
+
+// Every admin route needs a permission. Anything not listed here is owner-only, so a new route is safe by default.
+const RULES = [
+  [/^\/(password|dashboard)$/, null],
+  [/^\/(products|variants)(\/|$)/, 'products'],
+  [/^\/homepage(\/|$)/, 'homepage'],
+  [/^\/coupons(\/|$)/, 'coupons'],
+  [/^\/orders\/[^/]+\/refund$/, 'refunds'],
+  [/^\/export\//, 'export'],
+  [/^\/orders(\/|$)/, 'orders'],
+  [/^\/returns(\/|$)/, 'returns'],
+  [/^\/enquiries(\/|$)/, 'enquiries'],
+  [/^\/customers(\/|$)/, 'customers'],
+  [/^\/ledger(\/|$)/, (m) => (m === 'DELETE' ? 'money.delete' : 'money')],
+  [/^\/(settings|emails)(\/|$)/, (m) => (m === 'GET' ? 'settings.view' : 'settings.edit')],
+  [/^\/staff(\/|$)/, 'staff'],
+  [/^\/audit$/, 'audit'],
+];
+router.use((req, res, next) => {
+  const rule = RULES.find(([re]) => re.test(req.path));
+  const perm = rule ? (typeof rule[1] === 'function' ? rule[1](req.method) : rule[1]) : 'owner-only';
+  if (perm && !can(req.admin, perm)) return res.status(403).json({ error: 'Your role doesn’t allow this. Ask the owner if you need access.' });
+  next();
+});
 
 router.post('/password', (req, res) => {
   const row = db.prepare('SELECT password_hash FROM admins WHERE id = ?').get(req.admin.id);
@@ -110,8 +134,10 @@ router.get('/dashboard', (req, res) => {
     FROM order_items oi JOIN orders o ON o.id=oi.order_id WHERE o.${SOLD.replace('status', 'status')} AND o.created_at >= ${since}
     GROUP BY oi.product_id ORDER BY sales DESC LIMIT 5`).all();
 
+  const showSales = can(req.admin, 'sales');
   res.json({
     days,
+    showSales,
     sales: { gross, net: gross - refunded, refunded, orders, aov: orders ? Math.round(gross / orders / 100) * 100 : 0, codShare: orders ? codOrders / orders : 0 },
     rates: { rto: delivered + rto ? rto / (delivered + rto) : 0, returns: delivered ? returnsCount / delivered : 0, delivered, rtoCount: rto },
     daily,
@@ -131,6 +157,7 @@ router.get('/dashboard', (req, res) => {
     },
     lowStock,
     topProducts,
+    ...(showSales ? {} : { sales: null, rates: null, daily: [], money: null, topProducts: [] }),
   });
 });
 
@@ -388,6 +415,7 @@ router.post('/returns/:number/action', wrap(async (req, res) => {
     if (action === 'receive' && req.body?.restock !== false) restockReturn(r);
     addEvent(order.id, order.status, `Return ${r.number} ${to}${note ? ': ' + note : ''}`, by);
   } else if (action === 'refund') {
+    if (!can(req.admin, 'refunds')) throw new UserError('Your role doesn’t allow refunds. Ask the owner or a manager.', 403);
     if (r.type !== 'refund' || r.status !== 'received') throw new UserError('Refund only after the item is received and inspected.');
     const amount = Math.round(Number(req.body?.amount ?? r.refund_paise / 100) * 100);
     if (!(amount > 0) || amount > r.refund_paise) throw new UserError('Refund amount must be more than 0 and no more than the item value.');
@@ -448,6 +476,16 @@ router.delete('/ledger/:id', requireOwner, (req, res) => {
 });
 
 // ---- Settings & staff (owner only for changes) ----
+
+// ---- Customers (accounts) ----
+
+router.get('/customers', (req, res) => {
+  const q = `%${String(req.query.q || '').trim()}%`;
+  res.json(db.prepare(`SELECT c.id, c.name, c.phone, c.email, c.created_at, c.last_login_at,
+      (SELECT COUNT(*) FROM orders o WHERE o.customer_id = c.id AND o.status NOT IN ('pending_payment','cancelled')) AS orders,
+      (SELECT COALESCE(SUM(o.total_paise - o.refunded_paise), 0) FROM orders o WHERE o.customer_id = c.id AND o.status NOT IN ('pending_payment','cancelled')) AS spent
+    FROM customers c WHERE c.name LIKE ? OR c.phone LIKE ? OR c.email LIKE ? ORDER BY c.id DESC LIMIT 300`).all(q, q, q));
+});
 
 // ---- Emails ----
 
@@ -552,10 +590,23 @@ router.post('/staff', requireOwner, (req, res) => {
   if (!/^[^\s@]+@[^\s@]+$/.test(email) || !name) throw new UserError('Enter a name and email.');
   if (password.length < 10) throw new UserError('Temporary password must be at least 10 characters.');
   if (db.prepare('SELECT 1 FROM admins WHERE email = ?').get(email)) throw new UserError('That email already has an account.');
-  db.prepare(`INSERT INTO admins (email, name, password_hash, role) VALUES (?, ?, ?, 'staff')`).run(email, name, hashPassword(password));
+  const role = ['manager', 'orders', 'catalogue'].includes(req.body?.role) ? req.body.role : 'orders';
+  db.prepare(`INSERT INTO admins (email, name, password_hash, role) VALUES (?, ?, ?, ?)`).run(email, name, hashPassword(password), role);
   audit(req.admin.id, 'staff.add', 'admin', email);
   res.json({ ok: true });
 });
+router.put('/staff/:id', requireOwner, (req, res) => {
+  const id = Number(req.params.id);
+  const role = String(req.body?.role || '');
+  if (!['manager', 'orders', 'catalogue'].includes(role)) throw new UserError('Choose Manager, Orders staff or Catalogue staff.');
+  const target = db.prepare('SELECT * FROM admins WHERE id = ?').get(id);
+  if (!target || target.role === 'owner') throw new UserError('This account’s role can’t be changed.');
+  db.prepare('UPDATE admins SET role = ? WHERE id = ?').run(role, id);
+  db.prepare('DELETE FROM sessions WHERE admin_id = ?').run(id); // signs them out so the new role applies at once
+  audit(req.admin.id, 'staff.role', 'admin', target.email, `${target.role} -> ${role}`);
+  res.json({ ok: true });
+});
+
 router.delete('/staff/:id', requireOwner, (req, res) => {
   const id = Number(req.params.id);
   if (id === req.admin.id) throw new UserError("You can't remove your own account.");

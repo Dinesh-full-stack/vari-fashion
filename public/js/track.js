@@ -1,4 +1,4 @@
-import { boot, api, money, esc } from './common.js';
+import { boot, api, money, esc, getAccount } from './common.js';
 
 const config = await boot();
 const $ = (s, r = document) => r.querySelector(s);
@@ -122,7 +122,14 @@ form.addEventListener('submit', (e) => {
 // Prefill from the thank-you page link, then drop the phone number from the address bar.
 const q = new URLSearchParams(location.search);
 if (q.get('order')) form.elements.number.value = q.get('order');
-if (q.get('phone')) {
+const account = await getAccount();
+if (q.get('order') && !q.get('phone') && account) {
+  try {
+    current = await api(`/api/account/orders/${encodeURIComponent(q.get('order'))}`);
+    form.elements.phone.value = current.phone;
+    render();
+  } catch { /* not this customer's order: fall back to the normal lookup form */ }
+} else if (q.get('phone')) {
   form.elements.phone.value = q.get('phone');
   history.replaceState(null, '', `/track?order=${encodeURIComponent(q.get('order') || '')}${location.hash}`);
   lookup(form.elements.number.value, form.elements.phone.value);
