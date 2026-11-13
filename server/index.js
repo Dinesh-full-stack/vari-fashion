@@ -12,7 +12,10 @@ import { seedIfEmpty } from './seed.js';
 
 const app = express();
 app.disable('x-powered-by');
-app.set('trust proxy', 'loopback'); // behind nginx/caddy on the same server
+// Which proxy to trust for the visitor's real IP (used by rate limits and login throttling).
+// 'loopback' = nginx/Caddy on the same server (VPS). On Render and similar hosts set TRUST_PROXY=1.
+const trustProxy = process.env.TRUST_PROXY || 'loopback';
+app.set('trust proxy', /^\d+$/.test(trustProxy) ? Number(trustProxy) : trustProxy);
 
 app.use((req, res, next) => {
   res.set({

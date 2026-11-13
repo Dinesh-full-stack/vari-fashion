@@ -1,0 +1,24 @@
+# Render.com blueprint for a free test deployment.
+# Free plan: sleeps after 15 min idle, and the database/uploads reset on every restart or deploy.
+# For real customers use a VPS (see README) or a paid Render plan with a persistent disk.
+services:
+  - type: web
+    name: vari-fashion
+    runtime: node
+    plan: free
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /api/config
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: TRUST_PROXY
+        value: "1"
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: SITE_URL
+        sync: false
