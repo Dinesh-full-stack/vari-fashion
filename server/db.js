@@ -257,7 +257,7 @@ db.exec(`CREATE TABLE IF NOT EXISTS coupons (
 )`);
 
 const DEFAULT_SETTINGS = {
-  brand_name: 'Vari Fashion',
+  brand_name: 'Ramani Tex',
   store_open: '1',
   cod_enabled: '1',
   max_qty_per_item: '10',
@@ -271,7 +271,7 @@ const DEFAULT_SETTINGS = {
   order_alert_email: '',
   email_customers: '1',
   support_phone: '+91 99999 99999',
-  seller_legal_name: 'Your Business Name (replace)',
+  seller_legal_name: 'Ramani Tex',
   seller_address: 'Full registered address (replace)',
   shop_hours: '',
   seller_state: 'Tamil Nadu',

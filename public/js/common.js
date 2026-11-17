@@ -260,7 +260,7 @@ export function cardHtml(p) {
 
 // ---------- Boot ----------
 export async function boot() {
-  const c = await getConfig().catch(() => ({ brand: 'Vari Fashion', whatsapp: '', sellerName: '', sellerAddress: '', supportEmail: '', supportPhone: '', categories: [] }));
+  const c = await getConfig().catch(() => ({ brand: 'Ramani Tex', whatsapp: '', sellerName: '', sellerAddress: '', supportEmail: '', supportPhone: '', categories: [] }));
   document.title = document.title.replace('{brand}', c.brand);
   const h = document.getElementById('site-header');
   if (h) {

@@ -20,7 +20,7 @@
   <g transform="rotate(-8 700 760)">
     <rect x="560" y="690" width="300" height="140" fill="#f4efe6"/>
     <rect x="576" y="706" width="268" height="108" fill="none" stroke-dasharray="8 7" stroke-width="2"/>
-    <text x="710" y="768" text-anchor="middle" font-family="Georgia, serif" font-size="40" fill="#1c1916" stroke="none">Vari</text>
+    <text x="710" y="768" text-anchor="middle" font-family="Georgia, serif" font-size="40" fill="#1c1916" stroke="none">Ramani</text>
     <text x="710" y="798" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="22" fill="#a4502f" stroke="none">Tiruppur</text>
   </g>
   <path d="M820 200 q40 60 -10 120 q-40 50 20 110" fill="none" stroke="#f4efe6" stroke-width="3"/>

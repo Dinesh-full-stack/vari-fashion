@@ -3,7 +3,7 @@
 # For real customers use a VPS (see README) or a paid Render plan with a persistent disk.
 services:
   - type: web
-    name: vari-fashion
+    name: ramani-tex
     runtime: node
     plan: free
     buildCommand: npm ci --omit=dev
