@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import ProductCard from '../components/ProductCard.jsx';
 import { useApp } from '../app-context.jsx';
 import { api, money, useTitle } from '../lib.js';
+import { Reveal, SplitText } from '../motion.jsx';
 
 const PRICES = [[0, 1499], [1500, 2499], [2500, 3999], [4000, 0]];
 const priceLabel = ([lo, hi]) => (hi ? `${money(lo * 100)} – ${money(hi * 100)}` : `${money(lo * 100)} and above`);
@@ -102,10 +103,10 @@ export default function Shop() {
 
   return (
     <div className="wrap shop">
-      <nav className="crumbs" aria-label="Breadcrumb"><Link to="/">Home</Link><span>/</span><b>{title}</b></nav>
+      <nav className="crumbs mono" aria-label="Breadcrumb"><Link to="/">Home</Link><span>/</span><b>{title}</b></nav>
       <div className="shop-head">
-        <h1>{title}</h1>
-        <span className="muted">{products ? `${out.length} item${out.length === 1 ? '' : 's'}` : ''}</span>
+        <SplitText key={title} text={title} className="shop-title" />
+        <span className="mono shop-count">{products ? `${String(out.length).padStart(2, '0')} ${out.length === 1 ? 'piece' : 'pieces'}` : ''}</span>
         <div className="shop-tools">
           <button className="btn ghost filter-btn" onClick={() => setPanel(true)}>Filters{chips.length ? ` (${chips.length})` : ''}</button>
           <label className="sort"><span className="sr-only">Sort by</span>
@@ -127,7 +128,7 @@ export default function Shop() {
           {error && <p className="notice err">{error}</p>}
           {!products && !error && <div className="product-grid">{Array.from({ length: 8 }, (_, i) => <div key={i} className="sk card-sk" />)}</div>}
           {products && (out.length
-            ? <div className="product-grid">{out.map((p, i) => <ProductCard key={p.id} p={p} eager={i < 4} />)}</div>
+            ? <div className="product-grid shop-grid">{out.map((p, i) => <Reveal key={p.id} className="shop-item" y={40} delay={(i % 3) * 0.07}><ProductCard p={p} eager={i < 3} /></Reveal>)}</div>
             : <div className="empty"><h3>No matching products</h3><p>Try removing a filter or searching for something else.</p><button className="btn ghost" onClick={clear}>Clear filters</button></div>)}
         </div>
       </div>
