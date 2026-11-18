@@ -26,7 +26,8 @@ function mix(hex, toward, amount) {
   return '#' + c.map((v) => Math.round(v + (t - v) * amount).toString(16).padStart(2, '0')).join('');
 }
 
-export function placeholderSvg(kind, hex, view = 'front') {
+// cut = true leaves out the background and floor shadow, so the garment can sit on glass.
+export function placeholderSvg(kind, hex, view = 'front', cut = false) {
   const color = /^[0-9a-f]{6}$/i.test(hex) ? `#${hex}` : '#7a6a58';
   const shape = SHAPES[kind] || SHAPES.shirt;
   const bg = mix(color, 'white', 0.86);
@@ -39,8 +40,8 @@ export function placeholderSvg(kind, hex, view = 'front') {
     <pattern id="weave" width="6" height="6" patternUnits="userSpaceOnUse"><path d="M0 0H6M0 3H6" stroke="rgba(0,0,0,.06)" stroke-width="1"/><path d="M0 0V6" stroke="rgba(255,255,255,.05)"/></pattern>
     <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#000" flood-opacity=".18"/></filter>
   </defs>
-  <rect width="600" height="800" fill="url(#bg)"/>
-  <ellipse cx="300" cy="752" rx="190" ry="16" fill="rgba(0,0,0,.08)"/>
+  ${cut ? '' : `<rect width="600" height="800" fill="url(#bg)"/>
+  <ellipse cx="300" cy="752" rx="190" ry="16" fill="rgba(0,0,0,.08)"/>`}
   <g ${zoom}>
     <path d="${shape}" fill="${color}" filter="url(#soft)"/>
     <path d="${shape}" fill="url(#weave)"/>

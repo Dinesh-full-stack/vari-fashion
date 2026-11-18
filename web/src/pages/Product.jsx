@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import ProductCard from '../components/ProductCard.jsx';
 import { useApp } from '../app-context.jsx';
-import { api, bag, money, offPct, useBag, useTitle } from '../lib.js';
-import { Item, Magnetic, Reveal, SplitText, Stagger } from '../motion.jsx';
+import { api, bag, cut, money, offPct, useBag, useTitle } from '../lib.js';
+import { Item, Reveal, Stagger, m, ease } from '../motion.jsx';
 
 // The server embeds the product as JSON in the page (for search engines and a faster first paint).
 function embeddedProduct(slug) {
@@ -40,17 +40,21 @@ function SizeGuide({ p, sizes }) {
 
 function Gallery({ p, color }) {
   const images = (p.colors.find((c) => c.name === color) || p.colors[0]).images;
-  const track = useRef(null);
   const [at, setAt] = useState(0);
-  useEffect(() => { setAt(0); track.current?.scrollTo({ left: 0 }); }, [color]);
+  useEffect(() => setAt(0), [color, p.slug]);
   return (
     <div className="gallery">
-      <div className="gallery-track" ref={track} onScroll={(e) => setAt(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}>
-        {images.map((src, i) => (
-          <Reveal as="figure" key={src} y={i ? 56 : 24} delay={i ? 0.05 : 0}><img src={src} alt={`${p.name} in ${color}, view ${i + 1}`} width="600" height="800" loading={i ? 'lazy' : 'eager'} fetchPriority={i ? 'low' : 'high'} /></Reveal>
-        ))}
+      <div className="g-main glass">
+        <m.img key={`${color}-${at}`} src={cut(images[at] || images[0])} alt={`${p.name} in ${color}, view ${at + 1}`} width="600" height="800"
+          initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, ease }} fetchPriority="high" />
       </div>
-      {images.length > 1 && <div className="gallery-dots" aria-hidden="true">{images.map((_, i) => <i key={i} className={i === at ? 'on' : ''} />)}</div>}
+      {images.length > 1 && (
+        <div className="g-thumbs" role="group" aria-label="Views">
+          {images.map((src, i) => (
+            <button key={src} type="button" className="glass" aria-pressed={i === at} aria-label={`View ${i + 1}`} onClick={() => setAt(i)}><img src={cut(src)} alt="" loading="lazy" /></button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -65,10 +69,10 @@ function Pincode({ config }) {
   };
   return (
     <div className="deliver">
-      <span className="mono label">Delivery</span>
+      <span className="label">Delivery</span>
       <form onSubmit={submit}>
         <input inputMode="numeric" maxLength={6} placeholder="Enter pincode" value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))} aria-label="Pincode" />
-        <button className="btn ghost">Check</button>
+        <button className="btn glass-btn">Check</button>
       </form>
       {result === 'bad' && <p className="err small">Enter a valid 6-digit pincode.</p>}
       {result === 'ok' && (
@@ -105,7 +109,7 @@ export default function Product() {
   if (!p) {
     return error
       ? <div className="wrap empty"><h2>We couldn't find that piece</h2><p>{error}</p><Link className="btn" to="/shop">Back to the shop</Link></div>
-      : <div className="wrap pdp"><div className="sk" style={{ aspectRatio: '3/4', borderRadius: 24 }} /><div className="sk" style={{ height: 420 }} /></div>;
+      : <div className="wrap pdp"><div className="sk" style={{ aspectRatio: '3/4', borderRadius: 32 }} /><div className="sk" style={{ height: 460, borderRadius: 32 }} /></div>;
   }
   if (!color) return null;
 
@@ -129,20 +133,20 @@ export default function Product() {
   };
 
   return (
-    <div className="wrap">
+    <div className="wrap pdp-page">
       <nav className="crumbs" aria-label="Breadcrumb"><Link to="/">Home</Link><span>/</span><Link to={`/shop?c=${encodeURIComponent(p.category)}`}>{p.category}</Link><span>/</span><b>{p.name}</b></nav>
       <div className="pdp">
         <Gallery p={p} color={color} />
 
-        <div className="buybox">
-          <div className="brand-line mono">{config.brand} — {p.category}</div>
-          <SplitText key={p.slug} as="h1" text={p.name} delay={0.1} stagger={0.07} />
+        <div className="buybox glass">
+          <span className="eyebrow">{config.brand} · {p.category}</span>
+          <Reveal as="h1" key={p.slug} y={20}>{p.name}</Reveal>
           {p.tagline && <p className="tagline">{p.tagline}</p>}
           <div className="pdp-price"><b>{money(p.price)}</b>{off > 0 && <><s>{money(p.mrp)}</s><span className="off">{off}% off</span></>}</div>
           <div className="muted small">MRP inclusive of all taxes</div>
 
           <div className="opt">
-            <div className="opt-head"><span className="mono label">Colour — <b>{color}</b></span></div>
+            <div className="opt-head"><span className="label">Colour <b>{color}</b></span></div>
             <div className="colors" role="group" aria-label="Colour">
               {p.colors.map((c) => (
                 <button key={c.name} className="color-btn" aria-pressed={c.name === color} aria-label={c.name} title={c.name}
@@ -153,8 +157,8 @@ export default function Product() {
           </div>
 
           <div className="opt" ref={sizesRef}>
-            <div className="opt-head"><span className="mono label">Size{size && <> — <b>{size}</b></>}</span>
-              <button type="button" className="link plain" onClick={() => setChart((v) => !v)}>{chart ? 'Hide size chart' : 'Size chart'}</button></div>
+            <div className="opt-head"><span className="label">Size {size && <b>{size}</b>}</span>
+              <button type="button" className="link" onClick={() => setChart((v) => !v)}>{chart ? 'Hide size chart' : 'Size chart'}</button></div>
             {chart && <div className="chart-box"><SizeGuide p={p} sizes={sizes} /></div>}
             <div className="sizes" role="group" aria-label="Size">
               {sizes.map((s) => {
@@ -171,7 +175,7 @@ export default function Product() {
               <output aria-live="polite">{q}</output>
               <button aria-label="Increase quantity" disabled={!variant || q >= cap || q >= (variant.low || Infinity)} onClick={() => setQty(q + 1)}>+</button>
             </div>
-            <Magnetic className="add-wrap" strength={0.12}><button className="btn add" disabled={!!size && !canAdd} onClick={add}>{label} <span aria-hidden="true">→</span></button></Magnetic>
+            <button className="btn add" disabled={!!size && !canAdd} onClick={add}>{label}</button>
           </div>
           <p className="muted small">Up to {config.maxQty} per item online. Need more? <a className="link" href={`/bulk?product=${encodeURIComponent(p.name)}`}>Ask for a bulk quote</a>.</p>
 
@@ -189,12 +193,12 @@ export default function Product() {
 
       {similar.length > 0 && (
         <section className="block">
-          <div className="block-head"><div><span className="mono idx">More</span><SplitText as="h2" text="You may also like" inView stagger={0.05} /></div></div>
-          <Stagger className="stag-grid" gap={0.1}>{similar.map((s) => <Item key={s.id} className="stag-item"><ProductCard p={s} /></Item>)}</Stagger>
+          <div className="block-head"><Reveal as="h2" y={20}>You may also like</Reveal></div>
+          <Stagger className="product-grid" gap={0.08}>{similar.map((s) => <Item key={s.id} y={34}><ProductCard p={s} /></Item>)}</Stagger>
         </section>
       )}
 
-      <div className="mobile-buy">
+      <div className="mobile-buy glass">
         <div><b>{money(p.price)}</b>{off > 0 && <s>{money(p.mrp)}</s>}</div>
         <button className="btn" disabled={!!size && !canAdd} onClick={add}>{label}</button>
       </div>
