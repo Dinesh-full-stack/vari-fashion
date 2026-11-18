@@ -84,6 +84,8 @@ app.get('/product/:slug', (req, res, next) => {
   res.type('html').set('Cache-Control', 'no-cache').send(html);
 });
 
+// Browsers ask for /favicon.ico on their own; answer with the SVG icon instead of a 404.
+app.get('/favicon.ico', (req, res) => res.type('image/svg+xml').sendFile(path.join(PUBLIC, 'favicon.svg')));
 app.get('/robots.txt', (req, res) => res.type('text').send(`User-agent: *\nDisallow: /admin\nDisallow: /api/\nDisallow: /invoice/\nSitemap: ${config.siteUrl}/sitemap.xml\n`));
 app.get('/sitemap.xml', (req, res) => {
   const urls = ['/', '/shop', '/story', '/bulk', '/policies', ...loadProducts().map((p) => `/product/${p.slug}`)];

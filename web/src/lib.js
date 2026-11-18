@@ -65,3 +65,19 @@ export const STATES = ['Andaman and Nicobar Islands', 'Andhra Pradesh', 'Arunach
 
 /** SQLite timestamps ("2026-11-18 17:11:00") are UTC. */
 export const parseDate = (d) => new Date(String(d).includes('T') ? d : String(d).replace(' ', 'T') + 'Z');
+
+/** Scrolls to the section named in the address (#returns). Re-aims once fonts have loaded, because text reflow moves things, unless the visitor has already scrolled. */
+export function useHashScroll(ready = true) {
+  useEffect(() => {
+    if (!ready || !location.hash) return undefined;
+    let touched = false;
+    const go = () => { if (!touched) document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView({ behavior: 'instant', block: 'start' }); };
+    const stop = () => { touched = true; };
+    go();
+    document.fonts?.ready.then(go);
+    const t = setTimeout(go, 700);
+    addEventListener('wheel', stop, { passive: true, once: true });
+    addEventListener('touchstart', stop, { passive: true, once: true });
+    return () => { clearTimeout(t); removeEventListener('wheel', stop); removeEventListener('touchstart', stop); };
+  }, [ready]);
+}

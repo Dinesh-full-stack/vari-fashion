@@ -19,6 +19,9 @@ const DETAILS = {
   tee: '',
 };
 
+// Where each garment's hem sits, so its ground shadow can be drawn right under it.
+const HEM = { shirt: 660, tee: 650, kurta: 724, dress: 712, trousers: 716, jacket: 666 };
+
 function mix(hex, toward, amount) {
   const h = hex.replace('#', '');
   const c = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16));
@@ -33,17 +36,23 @@ export function placeholderSvg(kind, hex, view = 'front', cut = false) {
   const bg = mix(color, 'white', 0.86);
   const bg2 = mix(color, 'white', 0.74);
   const zoom = view === 'detail' ? 'transform="translate(-300 -260) scale(2)"' : view === 'side' ? 'transform="translate(600 0) scale(-1 1)"' : '';
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" preserveAspectRatio="xMidYMid slice">
+  // Cutout mode: crop tight around the garment and draw a flat shadow instead of a blur filter (much cheaper to paint).
+  const viewBox = cut ? '70 100 460 670' : '0 0 600 800';
+  const hem = (HEM[kind] || 660) + 12;
+  const shadow = cut ? `<ellipse cx="300" cy="${hem}" rx="190" ry="14" fill="url(#ground)"/>` : '';
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" preserveAspectRatio="xMidYMid ${cut ? 'meet' : 'slice'}">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${bg}"/><stop offset="1" stop-color="${bg2}"/></linearGradient>
     <linearGradient id="sh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="rgba(255,255,255,.22)"/><stop offset=".55" stop-color="rgba(255,255,255,0)"/><stop offset="1" stop-color="rgba(0,0,0,.22)"/></linearGradient>
     <pattern id="weave" width="6" height="6" patternUnits="userSpaceOnUse"><path d="M0 0H6M0 3H6" stroke="rgba(0,0,0,.06)" stroke-width="1"/><path d="M0 0V6" stroke="rgba(255,255,255,.05)"/></pattern>
+    <radialGradient id="ground"><stop offset="0" stop-color="rgba(30,45,80,.3)"/><stop offset="1" stop-color="rgba(30,45,80,0)"/></radialGradient>
     <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#000" flood-opacity=".18"/></filter>
   </defs>
   ${cut ? '' : `<rect width="600" height="800" fill="url(#bg)"/>
   <ellipse cx="300" cy="752" rx="190" ry="16" fill="rgba(0,0,0,.08)"/>`}
   <g ${zoom}>
-    <path d="${shape}" fill="${color}" filter="url(#soft)"/>
+    ${shadow}
+    <path d="${shape}" fill="${color}" ${cut ? '' : 'filter="url(#soft)"'}/>
     <path d="${shape}" fill="url(#weave)"/>
     <path d="${shape}" fill="url(#sh)"/>
     ${DETAILS[kind] || ''}

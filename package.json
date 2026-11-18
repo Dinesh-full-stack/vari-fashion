@@ -13,7 +13,9 @@
     "dev": "node --watch server/index.js",
     "build:web": "npm --prefix web ci --include=dev && npm --prefix web run build",
     "seed": "node server/seed.js",
-    "test": "node --test test/"
+    "test": "node --test test/",
+    "e2e": "npm --prefix e2e test",
+    "e2e:setup": "npm --prefix e2e install"
   },
   "dependencies": {
     "express": "^4.22.3",

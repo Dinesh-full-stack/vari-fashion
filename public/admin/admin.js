@@ -11,10 +11,12 @@ const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
 async function api(path, { method = 'GET', body, form } = {}) {
+  // The server only accepts JSON or form uploads for anything that changes data (a CSRF guard), so a DELETE with no body still sends "{}".
+  const changes = method !== 'GET' && method !== 'HEAD';
   const res = await fetch('/api/admin' + path, {
     method,
-    headers: form ? { 'X-Requested-With': 'fetch' } : body !== undefined ? { 'Content-Type': 'application/json' } : {},
-    body: form || (body !== undefined ? JSON.stringify(body) : undefined),
+    headers: form ? { 'X-Requested-With': 'fetch' } : body !== undefined || changes ? { 'Content-Type': 'application/json' } : {},
+    body: form || (body !== undefined ? JSON.stringify(body) : changes ? '{}' : undefined),
   });
   const data = await res.json().catch(() => ({}));
   if (res.status === 401 && path !== '/login') { me = null; renderLogin(); throw new Error('Signed out'); }
@@ -127,7 +129,8 @@ const title = (t) => { $('[data-title]').textContent = t; };
 
 async function route() {
   if (!me) return renderLogin();
-  const [name, arg] = (location.hash.slice(1) || 'dashboard').split('/');
+  // The part after "?" is a filter for the page (#orders?status=shipped), not part of its name.
+  const [name, arg] = (location.hash.slice(1) || 'dashboard').split('?')[0].split('/');
   $$('[data-nav]').forEach((a) => a.classList.toggle('on', a.dataset.nav === name || (name === 'order' && a.dataset.nav === 'orders') || (name === 'product' && a.dataset.nav === 'products')));
   $('[data-side]')?.classList.remove('open');
   view().innerHTML = '<p class="muted">Loading…</p>';
@@ -304,7 +307,7 @@ async function order(number) {
   title(`Order ${o.number}`);
   const NEXT_LABEL = { packed: 'Mark packed', shipped: 'Mark shipped (manual)', delivered: 'Mark delivered', rto: 'Mark RTO (came back)', cancelled: 'Cancel order', confirmed: 'Mark confirmed' };
   const canShip = ['confirmed', 'packed'].includes(o.status) && !o.awb;
-  view().innerHTML = `<div class="grid cols-2" style="grid-template-columns:1.4fr 1fr">
+  view().innerHTML = `<div class="grid cols-2 wide-left">
     <div>
       <div class="panel">
         <div class="panel-head"><div class="actions">${pill(STATUS, o.status)} ${pill(PAY, o.payment_status)} <span class="muted">${o.payment_method === 'cod' ? 'Cash on delivery' : 'Prepaid'} · ${when(o.created_at)}</span></div>
@@ -377,7 +380,7 @@ async function product(id) {
   const SIL = ['shirt', 'tee', 'kurta', 'dress', 'trousers', 'jacket'];
 
   view().innerHTML = `<form data-pform>
-    <div class="grid cols-2" style="grid-template-columns:1.4fr 1fr">
+    <div class="grid cols-2 wide-left">
     <div>
       <div class="panel"><h2 style="margin-bottom:14px">Details</h2>
         <div class="form-grid">
