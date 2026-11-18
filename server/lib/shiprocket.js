@@ -84,6 +84,13 @@ export async function createShipment(order, items) {
   for (const k of ['billing_address_2']) if (!payload[k]) delete payload[k];
   for (const it of payload.order_items) if (!it.hsn) delete it.hsn;
   const created = await call('POST', '/orders/create/adhoc', payload);
+  if (!created?.shipment_id) {
+    // Shiprocket accepted the order but did not make a shipment for it, so there is nothing to assign a courier to.
+    // The reply says why (often an unverified pickup address, pending KYC, or an empty wallet); show it instead of a vague error.
+    console.error('[shiprocket] order created without a shipment id:', JSON.stringify(created).slice(0, 800));
+    const why = created?.message || created?.status || 'no reason given';
+    throw Object.assign(new Error(`Shiprocket created order ${created?.order_id || ''} but no shipment (${why}). Check it under Orders › New in the Shiprocket panel, and that your KYC, pickup address and wallet are all complete.`), { status: 502 });
+  }
   const awb = await call('POST', '/courier/assign/awb', { shipment_id: created.shipment_id });
   const data = awb?.response?.data || {};
   try { await call('POST', '/courier/generate/pickup', { shipment_id: [created.shipment_id] }); } catch { /* pickup can be scheduled from the Shiprocket panel */ }
