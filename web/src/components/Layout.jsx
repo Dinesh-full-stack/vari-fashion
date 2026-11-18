@@ -47,7 +47,7 @@ function Header() {
         <span className="pill" style={{ transform: `translateX(${pill.x}px)`, width: pill.w, opacity: pill.on ? 1 : 0 }} />
         <Link to="/shop" aria-current={active('') ? 'page' : undefined}>All</Link>
         {(config.categories || []).map((c) => <Link key={c} to={`/shop?c=${encodeURIComponent(c)}`} aria-current={active(c) ? 'page' : undefined}>{c}</Link>)}
-        <a href="/story">Story</a>
+        <Link to="/story" aria-current={pathname === '/story' ? 'page' : undefined}>Story</Link>
       </nav>
       <div className="tools glass">
         <form className="nav-search" role="search" onSubmit={(e) => { e.preventDefault(); nav(q.trim() ? `/shop?q=${encodeURIComponent(q.trim())}` : '/shop'); }}>
@@ -55,7 +55,7 @@ function Header() {
           {Icon.search}
           <input id="nav-q" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" />
         </form>
-        <a className="round" href="/account" aria-label={account ? `My account, ${account.name.split(' ')[0]}` : 'Log in'} title={account ? account.name : 'Log in'}>{Icon.user}</a>
+        <Link className="round" to="/account" aria-label={account ? `My account, ${account.name.split(' ')[0]}` : 'Log in'} title={account ? account.name : 'Log in'}>{Icon.user}</Link>
         <button className="round" onClick={openBag} aria-label={`Open bag${count ? `, ${count} items` : ''}`}>
           {Icon.bag}
           {count > 0 && <m.span key={count} className="count" initial={{ scale: 1.7 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 500, damping: 16 }}>{count}</m.span>}
@@ -131,8 +131,8 @@ function BagDrawer() {
               <div className="row"><span>Subtotal</span><b>{money(sub)}</b></div>
               {blocked
                 ? <button className="btn block" disabled>Fix the items marked above</button>
-                : <a className="btn block" href="/checkout">Checkout</a>}
-              <a className="link center" href="/bag">View full bag</a>
+                : <Link className="btn block" to="/checkout" onClick={closeBag}>Checkout</Link>}
+              <Link className="link center" to="/bag" onClick={closeBag}>View full bag</Link>
             </div>
           </>
         )}
@@ -155,9 +155,9 @@ function Footer() {
         <div className="footer-panel glass">
           <div className="footer-grid">
             <div><h4>Shop</h4>{(c.categories || []).map((x) => <Link key={x} to={`/shop?c=${encodeURIComponent(x)}`}>{x}</Link>)}<Link to="/shop">All products</Link></div>
-            <div><h4>Help</h4><a href="/track">Track your order</a><a href="/track#return">Return or exchange</a><a href="/bulk">Bulk orders</a>{c.whatsapp && <a href={`https://wa.me/${encodeURIComponent(c.whatsapp)}`} target="_blank" rel="noopener noreferrer">WhatsApp us</a>}</div>
-            <div><h4>Policies</h4><a href="/policies#shipping">Shipping</a><a href="/policies#returns">Returns &amp; refunds</a><a href="/policies#privacy">Privacy</a><a href="/policies#terms">Terms</a><a href="/policies#grievance">Grievance officer</a></div>
-            <div><h4>{c.brand}</h4><p>Made by our family workshop in Tiruppur since 2019. Visit our shop in Erode.</p><a href="/story">Our story</a>
+            <div><h4>Help</h4><Link to="/track">Track your order</Link><Link to="/track#return">Return or exchange</Link><Link to="/bulk">Bulk orders</Link>{c.whatsapp && <a href={`https://wa.me/${encodeURIComponent(c.whatsapp)}`} target="_blank" rel="noopener noreferrer">WhatsApp us</a>}</div>
+            <div><h4>Policies</h4><Link to="/policies#shipping">Shipping</Link><Link to="/policies#returns">Returns &amp; refunds</Link><Link to="/policies#privacy">Privacy</Link><Link to="/policies#terms">Terms</Link><Link to="/policies#grievance">Grievance officer</Link></div>
+            <div><h4>{c.brand}</h4><p>Made by our family workshop in Tiruppur since 2019. Visit our shop in Erode.</p><Link to="/story">Our story</Link>
               <p className="small">{c.sellerName}<br />{c.sellerAddress}<br />{c.supportEmail} · {c.supportPhone}</p></div>
           </div>
           <div className="footer-base"><span>© {new Date().getFullYear()} {c.brand}. All prices in INR, inclusive of GST.</span><span>UPI · Cards · Net banking · Cash on delivery</span></div>

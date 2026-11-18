@@ -285,8 +285,8 @@ export default function Stage({ products }) {
       <div className="rail glass" data-nodrag>
         <Link className="on" to="/shop" aria-label="Shop all" title="Shop all">{Icon.grid}</Link>
         <button type="button" onClick={openBag} aria-label="Open bag" title="Bag">{Icon.bag}</button>
-        <a href="/track" aria-label="Track an order" title="Track an order">{Icon.truck}</a>
-        <a href="/account" aria-label="My account" title="My account">{Icon.user}</a>
+        <Link to="/track" aria-label="Track an order" title="Track an order">{Icon.truck}</Link>
+        <Link to="/account" aria-label="My account" title="My account">{Icon.user}</Link>
       </div>
 
       <div className="buy glass" data-nodrag>
