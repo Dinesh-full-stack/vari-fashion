@@ -162,3 +162,8 @@
 /* The shop's header is a row; headers on every other page are a simple stack. */
 .wrap:not(.shop) > .page-head { display: block; }
 .wrap:not(.shop) > .page-head.account-head { display: flex; }
+
+/* Cancel order */
+.btn.danger-solid { background: var(--err); box-shadow: 0 12px 26px -14px rgba(210,58,34,.8); }
+.btn.danger-solid:hover:not(:disabled) { background: #a92b17; }
+.btn.glass-btn.danger { color: var(--err); }

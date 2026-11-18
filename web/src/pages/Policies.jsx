@@ -37,7 +37,7 @@ export default function Policies() {
 
         <h2 id="cancellation">Cancellation</h2>
         <ul>
-          <li>You can cancel an order before it ships by messaging us on WhatsApp or email with your order number.</li>
+          <li>You can cancel an order yourself, any time before it ships, from the <a className="link" href="/track">Track order</a> page. You can also message us on WhatsApp or email with your order number.</li>
           <li>Once an order has shipped it cannot be cancelled, but you can return it after delivery.</li>
           <li>Refunds for cancelled prepaid orders go back to the original payment method.</li>
         </ul>

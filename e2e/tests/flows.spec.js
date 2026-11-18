@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
-import { ready, watch } from './helpers.js';
+import { ADMIN } from '../playwright.config.js';
+import { ready, shot, watch } from './helpers.js';
 
 const rand = () => Math.floor(Math.random() * 1e9);
 const buyer = () => ({ name: 'Test Buyer', phone: `9${String(rand()).padStart(9, '0')}`, email: `buyer.${rand()}@example.com` });
@@ -313,5 +314,64 @@ test.describe('navigation', () => {
     await addToBag(page);
     await page.keyboard.press('Escape');
     await expect(page.locator('.tools .count')).toHaveText('1');
+  });
+});
+
+test.describe('cancelling an order', () => {
+  async function placeOrder(request, b) {
+    const products = await (await request.get('/api/products')).json();
+    const variant = products.find((x) => !x.soldOut).variants.find((v) => v.available);
+    const res = await request.post('/api/checkout', {
+      data: { items: [{ variantId: variant.id, qty: 1 }], paymentMethod: 'cod', customer: { name: b.name, phone: b.phone, email: b.email, line1: '9 Test Lane', line2: '', city: 'Erode', state: 'Tamil Nadu', pincode: '638001' } },
+    });
+    expect(res.ok(), await res.text()).toBeTruthy();
+    return (await res.json()).order.number;
+  }
+  const open = async (page, number, b) => {
+    await page.goto('/track');
+    await page.getByLabel('Order number').fill(number);
+    await page.getByLabel('Mobile number').fill(b.phone);
+    await page.getByRole('button', { name: 'Find my order' }).click();
+    await expect(page.getByRole('heading', { name: `Order ${number}` })).toBeVisible();
+  };
+
+  test('a customer cancels from the Track page after one confirmation', async ({ page, request }) => {
+    const problems = watch(page);
+    const b = buyer();
+    const number = await placeOrder(request, b);
+    await open(page, number, b);
+    await expect(page.getByRole('heading', { name: 'Cancel this order' })).toBeVisible();
+
+    await page.getByRole('button', { name: 'Cancel order' }).click();
+    await expect(page.getByText(`Cancel order ${number}?`)).toBeVisible();
+    await page.getByRole('button', { name: 'Keep my order' }).click(); // changed their mind: nothing happens
+    await expect(page.getByRole('heading', { name: 'Cancel this order' })).toBeVisible();
+
+    await page.getByRole('button', { name: 'Cancel order' }).click();
+    await page.getByText(`Cancel order ${number}?`).scrollIntoViewIfNeeded();
+    await shot(page, `${test.info().project.name}-cancel-confirm`);
+    await page.getByLabel(/Why are you cancelling/).selectOption('Ordered by mistake');
+    await page.getByRole('button', { name: 'Yes, cancel my order' }).click();
+    await expect(page.getByText('Your order is cancelled. There is nothing to pay.')).toBeVisible();
+    await expect(page.locator('.status-line')).toContainText('Cancelled');
+    await expect(page.getByRole('heading', { name: 'Cancel this order' })).toHaveCount(0);
+    await expect(page.locator('.timeline')).toContainText('Cancelled by the customer: Ordered by mistake');
+    expect(problems).toEqual([]);
+  });
+
+  test('once an order has shipped there is no cancel button', async ({ page, request }) => {
+    const b = buyer();
+    const number = await placeOrder(request, b);
+    expect((await request.post('/api/admin/login', { data: ADMIN })).ok()).toBeTruthy();
+    expect((await request.post(`/api/admin/orders/${number}/ship`, { data: {} })).ok()).toBeTruthy();
+    await open(page, number, b);
+    await expect(page.locator('.status-line')).toContainText('Shipped');
+    await expect(page.getByRole('heading', { name: 'Cancel this order' })).toHaveCount(0);
+  });
+
+  test('the policies page tells customers they can cancel themselves', async ({ page }) => {
+    await page.goto('/policies#cancellation');
+    await ready(page);
+    await expect(page.locator('#cancellation + ul')).toContainText('cancel an order yourself');
   });
 });

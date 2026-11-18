@@ -57,7 +57,7 @@ async function orderEmail(orderId, event) {
         to: o.email, kind: 'order_confirmed', ref: o.number,
         subject: `Order ${o.number} confirmed — ${s.brand_name}`,
         html: layout(s, `Thank you, ${o.customer_name.split(' ')[0]}! Your order is confirmed.`,
-          `<p style="font-size:14px">Order <b>${esc(o.number)}</b>. We'll pack it within 1–2 working days and email you the tracking link when it ships.</p>
+          `<p style="font-size:14px">Order <b>${esc(o.number)}</b>. We'll pack it within 1–2 working days and email you the tracking link when it ships. You can cancel it from the tracking page any time before it ships.</p>
            ${itemsTable(o, items)}<p style="font-size:14px">${esc(pay)}</p>${address(o)}`,
           { label: 'Track your order', url: trackUrl(o) }),
         text: text(`Thank you! Order ${o.number} is confirmed.`, ...items.map((i) => `- ${i.product_name} (${i.color}/${i.size}) x${i.qty}`), `Total: ${rupees(o.total_paise)}`, pay, `Track: ${trackUrl(o)}`),
@@ -94,6 +94,18 @@ async function orderEmail(orderId, event) {
         { label: 'Exchange or return', url: `${trackUrl(o)}#return` }),
       text: text(`Order ${o.number} has been delivered.`, `Need an exchange or refund? You have ${days} days: ${trackUrl(o)}`),
     });
+  } else if (event === 'customer_cancelled') {
+    if (s.order_alert_email) {
+      const refund = o.payment_status === 'paid_needs_refund';
+      await sendMail({
+        to: s.order_alert_email, kind: 'order_cancelled_alert', ref: o.number,
+        subject: `Customer cancelled order ${o.number}${refund ? ' · REFUND NEEDED' : ''}`,
+        html: layout(s, `Order ${o.number} was cancelled by the customer`,
+          `<p style="font-size:14px">${esc(o.customer_name)} · ${esc(o.phone)}<br>${o.payment_method === 'cod' ? 'Cash on delivery: nothing to refund.' : refund ? `<b>Paid online: refund ${rupees(o.total_paise)} from the order page.</b>` : 'Online payment was not completed.'}</p>${itemsTable(o, items)}<p style="font-size:14px">The items are back on sale.</p>`,
+          { label: 'Open in admin', url: `${config.siteUrl}/admin/#order/${encodeURIComponent(o.number)}` }),
+        text: text(`Order ${o.number} was cancelled by the customer.`, `${o.customer_name} ${o.phone}`, refund ? `REFUND NEEDED: ${rupees(o.total_paise)}` : 'No refund needed.'),
+      });
+    }
   } else if (event === 'cancelled' && toCustomer) {
     const refund = o.payment_status === 'paid_needs_refund' || o.payment_status === 'refunded';
     await sendMail({

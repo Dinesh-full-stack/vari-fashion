@@ -283,3 +283,41 @@ test('staff roles: each role is limited to its own pages', async () => {
   cookie = '';
   assert.equal((await api('POST', '/api/admin/login', { email: 'owner@test.local', password: 'test-password-123' })).status, 200);
 });
+
+test('customers can cancel their own order until it ships', async () => {
+  const products = (await api('GET', '/api/products')).data;
+  const variant = products.flatMap((p) => p.variants).find((v) => v.available);
+  const place = async (method) => (await api('POST', '/api/checkout', { items: [{ variantId: variant.id, qty: 1 }], customer, paymentMethod: method })).data;
+  const cancel = (number, phone = customer.phone, reason) => api('POST', '/api/orders/cancel', { number, phone, reason });
+
+  // A cash-on-delivery order: the wrong phone is refused, the right one cancels it and says why
+  const cod = (await place('cod')).order.number;
+  assert.equal((await cancel(cod, '9000000000')).status, 404);
+  const before = await api('POST', '/api/track', { number: cod, phone: customer.phone });
+  assert.equal(before.data.canCancel, true);
+  const done = await cancel(cod, customer.phone, 'Ordered by mistake');
+  assert.equal(done.status, 200, JSON.stringify(done.data));
+  assert.equal(done.data.status, 'cancelled');
+  assert.equal(done.data.canCancel, false);
+  assert.ok(done.data.events.some((e) => /Cancelled by the customer: Ordered by mistake/.test(e.note)));
+  // cancelling again is refused
+  assert.equal((await cancel(cod)).status, 400);
+
+  // A paid online order: cancelling flags a refund for the owner
+  const pre = (await place('prepaid')).order.number;
+  await api('POST', '/api/payment/mock-complete', { number: pre });
+  const refunded = await cancel(pre);
+  assert.equal(refunded.data.status, 'cancelled');
+  assert.equal(refunded.data.paymentStatus, 'paid_needs_refund');
+  assert.equal(refunded.data.refundDue, true);
+
+  // An order that has shipped can no longer be cancelled by the customer
+  const toShip = (await place('cod')).order.number;
+  await api('POST', '/api/admin/login', { email: 'owner@test.local', password: 'test-password-123' });
+  assert.equal((await api('POST', `/api/admin/orders/${toShip}/ship`, {}, { admin: true })).data.status, 'shipped');
+  const late = await api('POST', '/api/track', { number: toShip, phone: customer.phone });
+  assert.equal(late.data.canCancel, false);
+  const refused = await cancel(toShip);
+  assert.equal(refused.status, 400);
+  assert.match(refused.data.error, /shipped|closed/i);
+});

@@ -6,7 +6,7 @@ import { config, paymentsLive, ROOT } from '../config.js';
 import { loadProducts, loadProduct, similarProducts } from '../lib/catalog.js';
 import {
   UserError, priceBag, createOrder, getOrderByNumber, getOrderItems, getOrderEvents, markPaid, markPaymentFailed,
-  requestReturn, normalisePhone, STATUS_LABEL, changeStatus, addEvent,
+  requestReturn, normalisePhone, STATUS_LABEL, changeStatus, addEvent, canCustomerCancel, cancelByCustomer,
 } from '../lib/orders.js';
 import { createGatewayOrder, verifyCheckoutSignature, verifyWebhookSignature } from '../lib/razorpay.js';
 import { trackAwb, mapShiprocketStatus } from '../lib/shiprocket.js';
@@ -241,12 +241,21 @@ async function trackView(order) {
     returns: returns.map((r) => ({ ...r, items: JSON.parse(r.items) })),
     returnBy,
     canReturn: order.status === 'delivered' && returnBy && Date.now() < Date.parse(returnBy),
+    canCancel: canCustomerCancel(order),
+    refundDue: order.payment_status === 'paid_needs_refund' || order.payment_status === 'refunded' || order.payment_status === 'partially_refunded',
     invoiceUrl: order.invoice_no ? `/invoice/${order.number}?t=${invoiceToken(order.number)}` : null,
   };
 }
 
 router.post('/api/track', lookupLimiter, wrap(async (req, res) => {
   res.json(await trackView(findCustomerOrder(req.body?.number, req.body?.phone)));
+}));
+
+// The customer cancels their own order (before it ships). Same number + phone check as tracking.
+router.post('/api/orders/cancel', lookupLimiter, wrap(async (req, res) => {
+  const order = findCustomerOrder(req.body?.number, req.body?.phone);
+  cancelByCustomer(order, req.body?.reason);
+  res.json(await trackView(findCustomerOrder(req.body.number, req.body.phone)));
 }));
 
 // ---- Customer accounts ----

@@ -7,6 +7,48 @@ const STEPS = [['confirmed', 'Confirmed'], ['packed', 'Packed'], ['shipped', 'Sh
 const RETURN_LABEL = { requested: 'Requested — we will review it within 1–2 days', approved: 'Approved — pickup being arranged', received: 'Received — being checked', refunded: 'Refunded', exchanged: 'Exchange sent', rejected: 'Not approved' };
 const fmt = (d) => parseDate(d).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
 
+const CANCEL_REASONS = ['Ordered by mistake', 'Found a better price', 'Delivery is taking too long', 'Want to change size or colour', 'Other'];
+
+/** Lets the customer cancel until the parcel ships. Asks once before doing it. */
+function CancelPanel({ order, onDone }) {
+  const [asking, setAsking] = useState(false);
+  const [reason, setReason] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const prepaid = order.paymentMethod !== 'cod' && order.paymentStatus === 'paid';
+
+  const cancel = async () => {
+    setBusy(true); setError('');
+    try {
+      await api('/api/orders/cancel', { method: 'POST', body: { number: order.number, phone: order.phone, reason } });
+      onDone(prepaid);
+    } catch (e) { setError(e.message); setBusy(false); }
+  };
+
+  return (
+    <div className="panel glass" id="cancel">
+      <h3>Cancel this order</h3>
+      {!asking ? (
+        <>
+          <p className="muted">Changed your mind? You can cancel until the order ships.{prepaid ? ' Your payment will be refunded to the original payment method.' : ''}</p>
+          <div className="actions"><button className="btn glass-btn danger" onClick={() => setAsking(true)}>Cancel order</button></div>
+        </>
+      ) : (
+        <div className="return-form">
+          <p><b>Cancel order {order.number}?</b> The items go back on sale.{prepaid ? ' Banks usually take 5–7 working days to show the refund.' : ''}</p>
+          <div className="field"><label htmlFor="cancel-reason">Why are you cancelling? (optional)</label>
+            <select id="cancel-reason" value={reason} onChange={(e) => setReason(e.target.value)}><option value="">Choose…</option>{CANCEL_REASONS.map((r) => <option key={r}>{r}</option>)}</select></div>
+          {error && <p className="notice err" role="alert">{error}</p>}
+          <div className="actions">
+            <button className="btn danger-solid" disabled={busy} onClick={cancel}>{busy ? 'Cancelling…' : 'Yes, cancel my order'}</button>
+            <button className="btn glass-btn" disabled={busy} onClick={() => setAsking(false)}>Keep my order</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ReturnForm({ order, onDone }) {
   const { config } = useApp();
   const [type, setType] = useState('exchange');
@@ -64,11 +106,12 @@ export default function Track() {
   const [order, setOrder] = useState(null);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [cancelNotice, setCancelNotice] = useState('');
   const [busy, setBusy] = useState(false);
   useTitle(`Track your order — ${config.brand}`);
 
   const lookup = async (n, p) => {
-    setError(''); setNotice(''); setBusy(true);
+    setError(''); setNotice(''); setCancelNotice(''); setBusy(true);
     try {
       const o = await api('/api/track', { method: 'POST', body: { number: n, phone: p } });
       setOrder({ ...o, phone: p });
@@ -107,6 +150,7 @@ export default function Track() {
 
       {o && (
         <>
+          {cancelNotice && <p className="notice ok" role="status">{cancelNotice}</p>}
           <div className="panel glass">
             <div className="order-title"><h2>Order {o.number}</h2><span className="muted">Placed {fmt(o.createdAt)}</span></div>
             <p className="status-line"><b>{o.statusLabel}</b>{o.awb ? ` · ${o.courier || 'Courier'} AWB ` : ''}{o.awb && <b>{o.awb}</b>}</p>
@@ -138,6 +182,13 @@ export default function Track() {
             <div className="panel glass"><h3>Your returns</h3>
               {o.returns.map((r) => <p key={r.number}><b>{r.number}</b> · {r.type === 'refund' ? 'Refund' : 'Exchange'} · {RETURN_LABEL[r.status] || r.status}{r.type === 'refund' && r.refund_paise ? ` · ${money(r.refund_paise)}` : ''}</p>)}
             </div>
+          )}
+
+          {o.canCancel && (
+            <CancelPanel order={o} onDone={async (refund) => {
+              await lookup(o.number, o.phone);
+              setCancelNotice(refund ? 'Your order is cancelled. We will refund your payment to the original payment method; banks usually take 5–7 working days.' : 'Your order is cancelled. There is nothing to pay.');
+            }} />
           )}
 
           <div className="panel glass" id="return">

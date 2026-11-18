@@ -15,7 +15,7 @@ export default function ThankYou() {
         <span className="eyebrow">Order placed</span>
         <h1>Thank you.</h1>
         <p className="lead">Your order number is <b>{number}</b>.</p>
-        <p className="muted">We'll send updates to your phone and email. Keep your order number handy to track it or request a return.</p>
+        <p className="muted">We'll send updates to your phone and email. Keep your order number handy to track it. Changed your mind? You can cancel from the tracking page until your order ships.</p>
         <div className="actions">
           <Link className="btn" to={`/track?order=${encodeURIComponent(number)}${phone ? `&phone=${encodeURIComponent(phone)}` : ''}`}>Track this order</Link>
           <Link className="btn glass-btn" to="/shop">Keep shopping</Link>
