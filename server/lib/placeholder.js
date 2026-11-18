@@ -53,7 +53,7 @@ export function placeholderSvg(kind, hex, view = 'front', cut = false) {
   <g ${zoom}>
     ${shadow}
     <path d="${shape}" fill="${color}" ${cut ? '' : 'filter="url(#soft)"'}/>
-    <path d="${shape}" fill="url(#weave)"/>
+    ${cut ? '' : `<path d="${shape}" fill="url(#weave)"/>`}
     <path d="${shape}" fill="url(#sh)"/>
     ${DETAILS[kind] || ''}
   </g>

@@ -10,8 +10,8 @@ export default function ProductCard({ p, eager = false }) {
   return (
     <Link className="card glass" to={`/product/${p.slug}`}>
       <div className="media">
-        <img src={first} alt={p.name} loading={eager ? 'eager' : 'lazy'} width="600" height="800" />
-        {second && <img className="alt" src={second} alt="" loading="lazy" width="600" height="800" />}
+        <img src={first} alt={p.name} loading={eager ? 'eager' : 'lazy'} decoding="async" width="600" height="800" />
+        {second && <img className="alt" src={second} alt="" loading="lazy" decoding="async" width="600" height="800" />}
         {(p.soldOut || few || off > 0) && <span className={`tag ${p.soldOut ? 'dark' : off && !few ? 'accent' : ''}`}>{p.soldOut ? 'Sold out' : few ? 'Few left' : `${off}% off`}</span>}
       </div>
       <div className="info">
