@@ -10,7 +10,7 @@
   <meta name="theme-color" content="#ffffff">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/home.css">
   <script type="module" src="/js/home.js"></script>
@@ -18,13 +18,11 @@
 <body>
   <header id="site-header"></header>
 
-  <!-- All text, banners and images on this page are edited in Admin › Homepage. -->
+  <!-- All text, banners and images on this page are edited in Admin › Homepage.
+       The first active banner is the hero. Any further banners appear as offer tiles below. -->
   <main id="main">
-    <section class="hero-slider" aria-roledescription="carousel" aria-label="Offers">
-      <div class="slides" data-slides><div class="slide skeleton" style="--bg:#f2eee8"></div></div>
-      <button class="slide-arrow prev" data-prev aria-label="Previous offer">‹</button>
-      <button class="slide-arrow next" data-next aria-label="Next offer">›</button>
-      <div class="dots" data-dots></div>
+    <section class="hero" data-hero aria-label="Featured">
+      <div class="hero-copy"><div class="skeleton" style="height:320px"></div></div>
     </section>
 
     <section class="wrap block" data-section="categories">
@@ -33,10 +31,8 @@
     </section>
 
     <section class="wrap block" data-section="newArrivals">
-      <div class="block-head"><h2 data-title></h2>
-        <div class="rail-nav"><button data-rail-prev aria-label="Scroll left">‹</button><button data-rail-next aria-label="Scroll right">›</button>
-        <a class="link" href="/shop?sort=new">View all</a></div></div>
-      <div class="rail" data-rail></div>
+      <div class="block-head"><h2 data-title></h2><a class="link" href="/shop?sort=new">View all</a></div>
+      <div class="product-grid" data-arrivals></div>
     </section>
 
     <section class="wrap block promos" data-section="promos" data-promos></section>
@@ -46,14 +42,14 @@
       <div class="product-grid" data-trending></div>
     </section>
 
-    <section class="wrap block" data-section="story">
-      <a class="story-strip" href="/story">
-        <img src="/media/illustrations/hero.svg" alt="" loading="lazy" data-story-img>
-        <div>
+    <section class="block story-band" data-section="story">
+      <a class="wrap story-strip" href="/story">
+        <div class="story-img"><img src="/media/illustrations/hero.svg" alt="" loading="lazy" data-story-img></div>
+        <div class="story-copy">
           <span class="eyebrow">Our story</span>
           <h2 data-title></h2>
           <p data-story-text></p>
-          <span class="link">Read our story →</span>
+          <span class="story-link">Read our story <span aria-hidden="true">→</span></span>
         </div>
       </a>
     </section>
