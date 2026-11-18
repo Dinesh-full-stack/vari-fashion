@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import ProductCard from '../components/ProductCard.jsx';
 import { useApp } from '../app-context.jsx';
 import { api, bag, money, offPct, useBag, useTitle } from '../lib.js';
+import { Item, Magnetic, Reveal, SplitText, Stagger } from '../motion.jsx';
 
 // The server embeds the product as JSON in the page (for search engines and a faster first paint).
 function embeddedProduct(slug) {
@@ -46,7 +47,7 @@ function Gallery({ p, color }) {
     <div className="gallery">
       <div className="gallery-track" ref={track} onScroll={(e) => setAt(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}>
         {images.map((src, i) => (
-          <figure key={src}><img src={src} alt={`${p.name} in ${color}, view ${i + 1}`} width="600" height="800" loading={i ? 'lazy' : 'eager'} fetchPriority={i ? 'low' : 'high'} /></figure>
+          <Reveal as="figure" key={src} y={i ? 56 : 24} delay={i ? 0.05 : 0}><img src={src} alt={`${p.name} in ${color}, view ${i + 1}`} width="600" height="800" loading={i ? 'lazy' : 'eager'} fetchPriority={i ? 'low' : 'high'} /></Reveal>
         ))}
       </div>
       {images.length > 1 && <div className="gallery-dots" aria-hidden="true">{images.map((_, i) => <i key={i} className={i === at ? 'on' : ''} />)}</div>}
@@ -64,7 +65,7 @@ function Pincode({ config }) {
   };
   return (
     <div className="deliver">
-      <span className="eyebrow">Delivery</span>
+      <span className="mono label">Delivery</span>
       <form onSubmit={submit}>
         <input inputMode="numeric" maxLength={6} placeholder="Enter pincode" value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))} aria-label="Pincode" />
         <button className="btn ghost">Check</button>
@@ -134,14 +135,14 @@ export default function Product() {
         <Gallery p={p} color={color} />
 
         <div className="buybox">
-          <div className="brand-line">{config.brand}</div>
-          <h1>{p.name}</h1>
+          <div className="brand-line mono">{config.brand} — {p.category}</div>
+          <SplitText key={p.slug} as="h1" text={p.name} delay={0.1} stagger={0.07} />
           {p.tagline && <p className="tagline">{p.tagline}</p>}
           <div className="pdp-price"><b>{money(p.price)}</b>{off > 0 && <><s>{money(p.mrp)}</s><span className="off">{off}% off</span></>}</div>
           <div className="muted small">MRP inclusive of all taxes</div>
 
           <div className="opt">
-            <div className="opt-head"><span className="eyebrow">Colour <b>{color}</b></span></div>
+            <div className="opt-head"><span className="mono label">Colour — <b>{color}</b></span></div>
             <div className="colors" role="group" aria-label="Colour">
               {p.colors.map((c) => (
                 <button key={c.name} className="color-btn" aria-pressed={c.name === color} aria-label={c.name} title={c.name}
@@ -152,7 +153,7 @@ export default function Product() {
           </div>
 
           <div className="opt" ref={sizesRef}>
-            <div className="opt-head"><span className="eyebrow">Size {size && <b>{size}</b>}</span>
+            <div className="opt-head"><span className="mono label">Size{size && <> — <b>{size}</b></>}</span>
               <button type="button" className="link plain" onClick={() => setChart((v) => !v)}>{chart ? 'Hide size chart' : 'Size chart'}</button></div>
             {chart && <div className="chart-box"><SizeGuide p={p} sizes={sizes} /></div>}
             <div className="sizes" role="group" aria-label="Size">
@@ -170,7 +171,7 @@ export default function Product() {
               <output aria-live="polite">{q}</output>
               <button aria-label="Increase quantity" disabled={!variant || q >= cap || q >= (variant.low || Infinity)} onClick={() => setQty(q + 1)}>+</button>
             </div>
-            <button className="btn add" disabled={!!size && !canAdd} onClick={add}>{label}</button>
+            <Magnetic className="add-wrap" strength={0.12}><button className="btn add" disabled={!!size && !canAdd} onClick={add}>{label} <span aria-hidden="true">→</span></button></Magnetic>
           </div>
           <p className="muted small">Up to {config.maxQty} per item online. Need more? <a className="link" href={`/bulk?product=${encodeURIComponent(p.name)}`}>Ask for a bulk quote</a>.</p>
 
@@ -188,8 +189,8 @@ export default function Product() {
 
       {similar.length > 0 && (
         <section className="block">
-          <div className="block-head"><h2>You may also like</h2></div>
-          <div className="product-grid">{similar.map((s) => <ProductCard key={s.id} p={s} />)}</div>
+          <div className="block-head"><div><span className="mono idx">More</span><SplitText as="h2" text="You may also like" inView stagger={0.05} /></div></div>
+          <Stagger className="stag-grid" gap={0.1}>{similar.map((s) => <Item key={s.id} className="stag-item"><ProductCard p={s} /></Item>)}</Stagger>
         </section>
       )}
 
