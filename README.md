@@ -47,6 +47,23 @@ On first start the server does two things:
 | Size charts | `public/js/product.js` → `sizeGuide()` |
 | Policy wording | `public/policies.html`. Have a lawyer or CA review it |
 
+## Browser tests (Playwright)
+
+`npm test` checks the order logic. The tests in `e2e/` drive a real Chrome browser through the whole site, on a desktop and on a phone-sized screen, like a customer and like the shop owner would:
+
+- every page loads with no errors and no sideways scrolling, and long pages are scrolled one screen at a time;
+- the home stage, shop filters, product choices, bag, checkout (cash on delivery and test card payments), order tracking, accounts, bulk enquiries and policies;
+- the admin panel: sign-in, every section, shipping and delivering an order, coupons, bank entries, staff roles;
+- speed: frame times with the CPU slowed 4x, so lag shows up before customers feel it.
+
+```bash
+npm run e2e:setup     # once: installs Playwright (it uses the Chrome already on your computer)
+npm run build:web     # the tests use the built storefront
+npm run e2e           # runs everything; a report is written to e2e/report
+```
+
+The tests start their own copy of the store on port 3200 with a throwaway database, so they never touch real orders. Screenshots of every page are saved in `e2e/shots` for a quick look.
+
 ## How orders work
 
 - **Stock is taken off sale when the order is placed**, inside one database transaction, so two buyers can never both get the last unit.

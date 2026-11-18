@@ -27,10 +27,17 @@ function Header() {
   const { pathname, search } = useLocation();
   const cat = new URLSearchParams(search).get('c');
   const [q, setQ] = useState('');
+  const [scrolled, setScrolled] = useState(false);
   const tabs = useRef(null);
   const [pill, setPill] = useState({ x: 0, w: 0, on: false });
 
   useEffect(() => setQ(new URLSearchParams(search).get('q') || ''), [search]);
+  useEffect(() => {
+    const on = () => setScrolled(scrollY > 24);
+    on();
+    addEventListener('scroll', on, { passive: true });
+    return () => removeEventListener('scroll', on);
+  }, []);
   useLayoutEffect(() => {
     const a = tabs.current?.querySelector('[aria-current="page"]');
     setPill(a ? { x: a.offsetLeft, w: a.offsetWidth, on: true } : (p) => ({ ...p, on: false }));
@@ -40,7 +47,7 @@ function Header() {
   const active = (c) => pathname === '/shop' && (cat || '') === (c || '');
 
   return (
-    <header className="nav-wrap">
+    <header className={`nav-wrap ${scrolled ? 'scrolled' : ''}`}>
       <a className="skip" href="#main">Skip to content</a>
       <Logo brand={config.brand} />
       <nav className="tabs glass" aria-label="Categories" ref={tabs}>

@@ -58,15 +58,18 @@ function Cursor({ stageRef }) {
     stage.addEventListener('pointerleave', leave);
     stage.addEventListener('pointerdown', down);
     addEventListener('pointerup', up);
-    let raf;
+    let raf = 0;
     const loop = () => {
       st.x += (st.tx - st.x) * 0.22; st.y += (st.ty - st.y) * 0.22;
       el.style.transform = `translate(${st.x - 29}px, ${st.y - 29}px)`;
-      raf = requestAnimationFrame(loop);
+      // Stop once it has caught up; the next pointer move starts it again.
+      raf = Math.abs(st.tx - st.x) + Math.abs(st.ty - st.y) > 0.4 ? requestAnimationFrame(loop) : 0;
     };
-    raf = requestAnimationFrame(loop);
+    const kick = () => { if (!raf) raf = requestAnimationFrame(loop); };
+    stage.addEventListener('pointermove', kick);
     return () => {
       cancelAnimationFrame(raf);
+      stage.removeEventListener('pointermove', kick);
       stage.removeEventListener('pointermove', move); stage.removeEventListener('pointerleave', leave); stage.removeEventListener('pointerdown', down);
       removeEventListener('pointerup', up);
     };
@@ -90,10 +93,11 @@ export default function Stage({ products }) {
   const cardEls = useRef([]);
   const curRef = useRef(null);
   const nextRef = useRef(null);
-  const gridRef = useRef(null);
+  const wipeRef = useRef(null);
+  const modelRef = useRef(null);
   const scanRef = useRef(null);
   const anims = useRef([]);
-  const S = useRef({ pos: 0, target: 0, intro: 0, dragging: false, drag: null, px: 0, py: 0, sx: 0, sy: 0, W: 1, H: 1, phone: false, shown: -1 }).current;
+  const S = useRef({ pos: 0, target: 0, intro: 0, dragging: false, drag: null, px: 0, py: 0, sx: 0, sy: 0, W: 1, H: 1, phone: false, shown: -1, lastIe: -1, lastSx: 0, lastSy: 0, wake: null }).current;
 
   const [shownIdx, setShownIdx] = useState(0);
   const item = cards[shownIdx % Math.max(1, N)];
@@ -110,14 +114,15 @@ export default function Stage({ products }) {
     anims.current.forEach((a) => a.cancel());
     if (reduced) { cur.src = figSrc; cur.dataset.src = figSrc; cur.style.opacity = 1; return; }
     next.src = figSrc;
+    const H = modelRef.current.clientHeight;
     const o = { duration: 950, easing: 'cubic-bezier(.65,0,.35,1)', fill: 'forwards' };
-    const a1 = next.animate([{ clipPath: 'inset(0 0 100% 0)' }, { clipPath: 'inset(0 0 0% 0)' }], o);
-    const a2 = gridRef.current.animate([{ clipPath: 'inset(0 0 100% 0)' }, { clipPath: 'inset(0 0 0 0)', offset: 0.5 }, { clipPath: 'inset(100% 0 0 0)' }], { ...o, duration: 1092 });
+    // The new garment is revealed from the top down: a clipping frame slides down while the picture slides up inside it.
+    const a1 = wipeRef.current.animate([{ transform: 'translateY(-101%)' }, { transform: 'translateY(0)' }], o);
+    const a2 = next.animate([{ transform: 'translateY(101%)' }, { transform: 'translateY(0)' }], o);
     const a3 = scanRef.current.animate([
-      { top: '0%', transform: 'scaleX(.2)', opacity: 0 }, { top: '6%', transform: 'scaleX(1)', opacity: 1, offset: 0.08 },
-      { top: '94%', transform: 'scaleX(1)', opacity: 1, offset: 0.92 }, { top: '100%', transform: 'scaleX(.2)', opacity: 0 }], o);
-    const a4 = next.animate([{ transform: 'scale(1.012)' }, { transform: 'scale(1)' }], { duration: 1250, easing: 'ease-out', fill: 'forwards' });
-    anims.current = [a1, a2, a3, a4];
+      { transform: 'translateY(0px) scaleX(.2)', opacity: 0 }, { transform: `translateY(${H * 0.06}px) scaleX(1)`, opacity: 1, offset: 0.08 },
+      { transform: `translateY(${H * 0.94}px) scaleX(1)`, opacity: 1, offset: 0.92 }, { transform: `translateY(${H}px) scaleX(.2)`, opacity: 0 }], o);
+    anims.current = [a1, a2, a3];
     a1.onfinish = () => {
       cur.src = figSrc; cur.dataset.src = figSrc; cur.style.opacity = 1;
       (cur.decode ? cur.decode() : Promise.resolve()).catch(() => {}).then(() => anims.current.forEach((a) => a.cancel()));
@@ -128,16 +133,14 @@ export default function Stage({ products }) {
   useEffect(() => {
     const stage = stageRef.current;
     if (!stage || !N) return undefined;
-    const measure = () => { const r = stage.getBoundingClientRect(); S.W = r.width; S.H = r.height; S.phone = innerWidth < 768; };
+    const measure = () => { const r = stage.getBoundingClientRect(); S.W = r.width; S.H = r.height; S.phone = innerWidth < 768; S.wake?.(); };
     measure();
     addEventListener('resize', measure);
-    const seeds = cards.map((_, i) => i * 1.7);
     const half = N / 2;
     let raf = 0;
     let visible = true;
 
-    const frame = (now) => {
-      const t = now / 1000;
+    const frame = () => {
       if (!S.dragging) S.pos += (S.target - S.pos) * (reduced ? 1 : 0.11);
       S.intro = Math.min(1, S.intro + (reduced ? 1 : 0.012));
       const ie = 1 - (1 - S.intro) ** 3;
@@ -150,45 +153,52 @@ export default function Stage({ products }) {
         const a = Math.abs(u);
         const sg = u < 0 ? -1 : 1;
         const x = sg * across(Math.min(a, 5), XS) * S.W * ie;
-        let s; let z; let op; let ry; let blur = 0;
+        let s; let z; let op; let ry;
         if (a < 1) { s = 0.55 + 0.45 * a; z = -260 * (1 - a); op = a; ry = -sg * 16 * a; }
-        else { s = 1 / (1 + 0.3 * (a - 1) ** 1.15); z = -110 * (a - 1); op = 1; ry = -sg * (16 + 9 * Math.min(2, a - 1)); blur = Math.max(0, a - 1.6) * 2.4; }
+        else { s = 1 / (1 + 0.3 * (a - 1) ** 1.15); z = -110 * (a - 1); op = 1; ry = -sg * (16 + 9 * Math.min(2, a - 1)); }
         if (a > 3.4) op = Math.max(0, 1 - (a - 3.4) / 0.8);
-        const bob = reduced ? 0 : Math.sin(t * 1.1 + seeds[i]) * S.H * 0.006 * Math.min(1, a);
-        const y = bob - (1 - s) * S.H * 0.04;
+        // Cards further out fade a little as well, standing in for depth without an expensive blur filter.
+        if (a > 1.6) op *= Math.max(0.35, 1 - (a - 1.6) * 0.22);
+        const y = -(1 - s) * S.H * 0.04;
         ry += S.sx * 10;
         const o = op * ie;
         el.style.transform = `translate(${x}px, ${y}px) perspective(1300px) translateZ(${z}px) rotateY(${ry}deg) rotateX(${-S.sy * 6}deg) scale(${s * (0.6 + 0.4 * ie)})`;
         el.style.opacity = o;
         el.style.visibility = o < 0.01 ? 'hidden' : 'visible';
         el.style.zIndex = a < 1 ? 1 : Math.round(100 - 10 * a);
-        el.style.filter = blur > 0.05 ? `blur(${blur}px)` : 'none';
       }
-      stage.style.setProperty('--ie', ie.toFixed(4));
-      stage.style.setProperty('--sx', S.sx.toFixed(4));
-      stage.style.setProperty('--sy', S.sy.toFixed(4));
+      if (Math.abs(ie - S.lastIe) > 0.001) { stage.style.setProperty('--ie', ie.toFixed(3)); S.lastIe = ie; }
+      if (Math.abs(S.sx - S.lastSx) > 0.002 || Math.abs(S.sy - S.lastSy) > 0.002) {
+        stage.style.setProperty('--sx', S.sx.toFixed(3)); stage.style.setProperty('--sy', S.sy.toFixed(3)); S.lastSx = S.sx; S.lastSy = S.sy;
+      }
       if (!S.dragging && Math.abs(S.target - S.pos) < 0.02) {
         const idx = mod(Math.round(S.target), N);
         if (idx !== S.shown) { S.shown = idx; setShownIdx(idx); }
       }
-      raf = visible ? requestAnimationFrame(frame) : 0;
+      // Nothing is moving: stop asking for frames. Input wakes the loop again.
+      const moving = S.dragging || Math.abs(S.target - S.pos) > 0.0008 || S.intro < 1 || Math.abs(S.px - S.sx) > 0.0008 || Math.abs(S.py - S.sy) > 0.0008;
+      if (!moving) { S.pos = S.target; }
+      raf = visible && moving ? requestAnimationFrame(frame) : 0;
     };
+    const wake = () => { if (visible && !raf) raf = requestAnimationFrame(frame); };
+    S.wake = wake;
     raf = requestAnimationFrame(frame);
 
     // Stop spending frames while the arc is scrolled out of view.
-    const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (visible && !raf) raf = requestAnimationFrame(frame); });
+    const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; wake(); });
     io.observe(stage);
     const onPointer = (e) => {
       const r = stage.getBoundingClientRect();
       S.px = (e.clientX - r.left) / r.width - 0.5; S.py = (e.clientY - r.top) / r.height - 0.5;
+      wake();
     };
     stage.addEventListener('pointermove', onPointer);
     return () => { cancelAnimationFrame(raf); io.disconnect(); removeEventListener('resize', measure); stage.removeEventListener('pointermove', onPointer); };
   }, [N, reduced, cards, S]);
 
   // ---- Input: drag, flick, wheel, keys ----
-  const step = (dir) => { S.target = Math.round(S.target) + dir; };
-  const toCard = (i) => { const u = mod(i - S.pos + N / 2, N) - N / 2; S.target = Math.round(S.pos + u); };
+  const step = (dir) => { S.target = Math.round(S.target) + dir; S.wake?.(); };
+  const toCard = (i) => { const u = mod(i - S.pos + N / 2, N) - N / 2; S.target = Math.round(S.pos + u); S.wake?.(); };
 
   const onPointerDown = (e) => {
     if ((e.pointerType === 'mouse' && e.button !== 0) || e.target.closest('[data-nodrag]')) return;
@@ -199,6 +209,7 @@ export default function Stage({ products }) {
       const dx = ev.clientX - d.x0;
       d.moved = Math.max(d.moved, Math.abs(dx));
       S.pos = d.p0 - dx / d.px;
+      S.wake?.();
       const now = performance.now();
       d.v = (ev.clientX - d.lastX) / Math.max(1, now - d.lastT);
       d.lastX = ev.clientX; d.lastT = now;
@@ -209,6 +220,7 @@ export default function Stage({ products }) {
       if (d.moved < 6 && d.card) toCard(Number(d.card.dataset.i));
       else S.target = Math.round(S.pos - Math.max(-6, Math.min(6, (d.v / d.px) * 144 * 3.2)));
       S.drag = null;
+      S.wake?.();
     };
     addEventListener('pointermove', move); addEventListener('pointerup', up); addEventListener('pointercancel', up);
   };
@@ -259,19 +271,19 @@ export default function Stage({ products }) {
         {cards.map((p, i) => (
           <button key={i} type="button" data-card data-i={i} className="gcard glass" ref={(el) => { cardEls.current[i] = el; }}
             aria-label={`${p.name}, ${money(p.price)}`} onClick={(e) => { if (e.detail === 0) toCard(i); }}>
-            <span className="sheen" />
-            <img className="g" src={cut(p.colors[0].images[0] || p.image)} alt="" draggable="false" />
-            <span className="gname">{p.name}</span>
-            <span className="gprice">{money(p.price)}</span>
+            <span className="bob" style={{ animationDelay: `${-(i * 0.9).toFixed(1)}s` }}>
+              <span className="sheen" />
+              <img className="g" src={cut(p.colors[0].images[0] || p.image)} alt="" draggable="false" decoding="async" />
+              <span className="gname">{p.name}</span>
+              <span className="gprice">{money(p.price)}</span>
+            </span>
           </button>
         ))}
       </div>
 
-      <div className="floor" aria-hidden="true" />
-      <div className="model" aria-hidden="true">
+      <div className="model" aria-hidden="true" ref={modelRef}>
         <img ref={curRef} className="fig cur-fig" alt="" draggable="false" style={{ opacity: 0 }} />
-        <img ref={nextRef} className="fig next-fig" alt="" draggable="false" />
-        <div ref={gridRef} className="scan-grid" />
+        <div ref={wipeRef} className="wipe"><img ref={nextRef} className="fig next-fig" alt="" draggable="false" /></div>
         <div ref={scanRef} className="scan" />
       </div>
 

@@ -1,6 +1,8 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import express from 'express';
 import { db, getSettings, intSetting, setting } from '../db.js';
-import { config, paymentsLive } from '../config.js';
+import { config, paymentsLive, ROOT } from '../config.js';
 import { loadProducts, loadProduct, similarProducts } from '../lib/catalog.js';
 import {
   UserError, priceBag, createOrder, getOrderByNumber, getOrderItems, getOrderEvents, markPaid, markPaymentFailed,
@@ -94,6 +96,13 @@ router.get('/api/products/:slug', (req, res) => {
   const found = loadProduct('slug', req.params.slug);
   if (!found || !found.row.active) return res.status(404).json({ error: 'Product not found.' });
   res.json({ ...found.product, similar: similarProducts(found.row) });
+});
+
+// Which story photos have been uploaded to public/media, so the page only asks for files that exist.
+router.get('/api/story-media', (req, res) => {
+  let files = [];
+  try { files = fs.readdirSync(path.join(ROOT, 'public', 'media')).filter((f) => /\.(jpe?g|png|webp)$/i.test(f)); } catch { /* no media folder yet */ }
+  res.set('Cache-Control', 'public, max-age=60').json(files);
 });
 
 router.get('/img/ph/:kind/:hex.svg', (req, res) => {

@@ -97,7 +97,7 @@
 
 .toc { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
 .toc .chip { display: inline-flex; align-items: center; }
-.prose h2 { margin: 18px 0 8px; scroll-margin-top: calc(var(--nav-h) + 10px); }
+.prose h2 { margin: 18px 0 8px; }
 .prose h2:first-child { margin-top: 0; }
 .prose ul { display: grid; gap: 8px; padding-left: 20px; list-style: disc; }
 .prose li, .prose p { color: var(--ink-2); }

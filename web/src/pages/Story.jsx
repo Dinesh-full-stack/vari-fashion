@@ -15,13 +15,17 @@ const LABELS = {
 };
 
 /** A photo from public/media/. Until the real file is uploaded it shows the drawing, and failing that a labelled empty frame. */
-function Photo({ name, alt, fig, caption, eager = false, className = '' }) {
-  const [stage, setStage] = useState(0);
-  const src = stage === 0 ? `/media/${name}.jpg` : `/media/illustrations/${name}.svg`;
+function Photo({ name, alt, fig, caption, files, eager = false, className = '' }) {
+  const [failed, setFailed] = useState(0);
+  const file = files?.find((f) => f.toLowerCase().startsWith(`${name}.`));
+  // stage 0: the uploaded photo, 1: the drawing, 2: an empty labelled frame. Wait for the file list so we never ask for a missing photo.
+  const stage = files === null ? -1 : file ? Math.min(failed, 2) : Math.min(failed + 1, 2);
+  const src = stage === 0 ? `/media/${file}` : `/media/illustrations/${name}.svg`;
   return (
     <figure className={`photo glass ${className}`}>
-      {stage < 2
-        ? <img src={src} alt={alt} loading={eager ? 'eager' : 'lazy'} fetchPriority={eager ? 'high' : 'auto'} onError={() => setStage((s) => s + 1)} />
+      {stage === -1 ? <div className="frame-empty" />
+        : stage < 2
+        ? <img src={src} alt={alt} loading={eager ? 'eager' : 'lazy'} fetchPriority={eager ? 'high' : 'auto'} onError={() => setFailed((n) => n + 1)} />
         : <div className="frame-empty"><span><b>Photo goes here</b>{LABELS[name]}<br />public/media/{name}.jpg</span></div>}
       <figcaption><span>Fig. {fig}</span> {caption}{stage === 1 && <em> Illustration, photo coming soon</em>}</figcaption>
     </figure>
@@ -31,7 +35,9 @@ function Photo({ name, alt, fig, caption, eager = false, className = '' }) {
 export default function Story() {
   const { config: c } = useApp();
   const [products, setProducts] = useState(null);
+  const [files, setFiles] = useState(null);
   useTitle(`Our story — ${c.brand}`);
+  useEffect(() => { api('/api/story-media').then(setFiles).catch(() => setFiles([])); }, []);
   useEffect(() => { api('/api/products').then((p) => setProducts(p.filter((x) => !x.soldOut).slice(0, 6))).catch(() => setProducts([])); }, []);
   const address = c.sellerAddress && !/replace/i.test(c.sellerAddress) ? c.sellerAddress : 'Shop address (set in Admin › Settings)';
 
@@ -41,7 +47,7 @@ export default function Story() {
         <div className="masthead mono"><span>Issue No. 01</span><span>Erode &amp; Tiruppur, Tamil Nadu</span><span>Since 2019</span></div>
 
         <section className="opening">
-          <Reveal className="opening-photo"><Photo name="hero" alt={`${c.brand} clothes`} fig="1" caption="Our workshop in Tiruppur." eager /></Reveal>
+          <Reveal className="opening-photo"><Photo files={files} name="hero" alt={`${c.brand} clothes`} fig="1" caption="Our workshop in Tiruppur." eager /></Reveal>
           <div className="opening-copy">
             <Reveal as="h1" y={26}>Stitched in Tiruppur. <em>Sold from our little shop in Erode.</em></Reveal>
             <Reveal as="p" className="lede" delay={0.1}>{c.brand} is a small label run by a few friends and one family workshop. Around ten tailors make everything we sell, and every piece is checked by hand before it's folded.</Reveal>
@@ -74,19 +80,19 @@ export default function Story() {
         <section className="making" aria-label="How a piece gets made">
           <div className="block-head"><Reveal as="h2" y={20}>How a piece gets made</Reveal></div>
           <div className="making-grid">
-            <Reveal className="m-photo"><Photo name="workshop-cutting" alt="Cutting fabric" fig="2" caption="The cutting table." /></Reveal>
+            <Reveal className="m-photo"><Photo files={files} name="workshop-cutting" alt="Cutting fabric" fig="2" caption="The cutting table." /></Reveal>
             <Reveal className="m-step panel glass" delay={0.08}><b>1</b><h3>Cut in small batches</h3><p>Fabric is laid out and cut a few dozen pieces at a time, so we're never sitting on a thousand of one shirt.</p></Reveal>
-            <Reveal className="m-photo"><Photo name="workshop-stitching" alt="Stitching at the machine" fig="3" caption="Stitching, Tiruppur." /></Reveal>
+            <Reveal className="m-photo"><Photo files={files} name="workshop-stitching" alt="Stitching at the machine" fig="3" caption="Stitching, Tiruppur." /></Reveal>
             <Reveal className="m-step panel glass" delay={0.08}><b>2</b><h3>Stitched by people, not a line</h3><p>Each piece goes through the hands of our tailors. Ten people, not a floor of three hundred.</p></Reveal>
             <Reveal className="m-step panel glass"><b>3</b><h3>Checked before it's folded</h3><p>Seams, buttons and measurements are checked against the size chart. Anything that isn't right goes back to the machine.</p></Reveal>
-            <Reveal className="m-photo"><Photo name="workshop-checking" alt="Checking a finished piece" fig="4" caption="Final check." /></Reveal>
+            <Reveal className="m-photo"><Photo files={files} name="workshop-checking" alt="Checking a finished piece" fig="4" caption="Final check." /></Reveal>
             <Reveal className="m-step panel glass"><b>4</b><h3>Then to Erode, and to you</h3><p>Finished pieces go to our shop, and online orders are packed by the same people who sell over the counter.</p></Reveal>
           </div>
         </section>
 
         <section className="pull">
           <Reveal as="blockquote" y={30}>“If we wouldn't wear it ourselves, it doesn't go on the shelf.”</Reveal>
-          <Reveal className="pull-photo"><Photo name="detail-1" alt="Close-up of stitching" fig="5" caption="Detail." /></Reveal>
+          <Reveal className="pull-photo"><Photo files={files} name="detail-1" alt="Close-up of stitching" fig="5" caption="Detail." /></Reveal>
         </section>
 
         <section className="spread" id="collection" aria-label="The collection">
@@ -108,7 +114,7 @@ export default function Story() {
         </section>
 
         <section className="people">
-          <Reveal className="people-photo"><Photo name="team" alt={`The ${c.brand} workshop team`} fig="6" caption="The workshop, Tiruppur." /></Reveal>
+          <Reveal className="people-photo"><Photo files={files} name="team" alt={`The ${c.brand} workshop team`} fig="6" caption="The workshop, Tiruppur." /></Reveal>
           <Reveal className="people-copy" delay={0.1}>
             <span className="eyebrow">The people</span>
             <h2>Around ten of us, most of us family.</h2>
@@ -117,7 +123,7 @@ export default function Story() {
         </section>
 
         <section className="visit">
-          <Reveal className="visit-photo"><Photo name="shop-erode" alt={`The ${c.brand} shop in Erode`} fig="7" caption="Our shop, Erode." /></Reveal>
+          <Reveal className="visit-photo"><Photo files={files} name="shop-erode" alt={`The ${c.brand} shop in Erode`} fig="7" caption="Our shop, Erode." /></Reveal>
           <Reveal className="visit-copy panel glass" delay={0.1}>
             <h2>Come and see us in Erode</h2>
             <p className="addr">{address}</p>

@@ -1,17 +1,12 @@
-import { useEffect } from 'react';
 import { useApp } from '../app-context.jsx';
-import { money, useTitle } from '../lib.js';
+import { money, useHashScroll, useTitle } from '../lib.js';
 
 const TOC = [['shipping', 'Shipping'], ['returns', 'Returns & refunds'], ['cancellation', 'Cancellation'], ['privacy', 'Privacy'], ['terms', 'Terms'], ['grievance', 'Grievance officer'], ['seller', 'Seller details']];
 
 export default function Policies() {
   const { config: c, ready } = useApp();
   useTitle(`Policies — ${c.brand}`);
-  // Jump to a section named in the link once the page has drawn (/policies#returns).
-  useEffect(() => {
-    if (!ready || !location.hash) return;
-    document.getElementById(location.hash.slice(1))?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, [ready]);
+  useHashScroll(ready);
 
   return (
     <div className="wrap page-narrow-lg">
