@@ -10,10 +10,10 @@ Payments go through **Razorpay** (UPI, cards, net banking) or **cash on delivery
 
 ## The React storefront (`web/`)
 
-The home, shop and product pages are a **React** app (Vite + React Router) in `web/`. It talks to the same API as before, so orders, payments, shipping and the admin panel are unchanged. The bag, checkout, track, account, story, bulk and policies pages are still the plain HTML pages in `public/`. Both share one bag (the `bag.v1` entry in the browser's local storage), so a bag filled in React goes straight through to checkout.
+Every customer page (home, shop, product, bag, checkout, thank-you, track, account, story, policies and bulk enquiries, plus the 404 page) is a **React** app (Vite + React Router) in `web/`. It talks to the same API as before, so orders, payments, shipping and the admin panel are unchanged. The admin panel is still a plain HTML page in `public/admin/`. The old plain HTML versions of the customer pages stay in `public/` as a fallback and are used only if `web/dist` has not been built.
 
 - `npm run build:web` installs the React app's packages and builds it into `web/dist`. **Run it before starting the server, and again after every change under `web/`.**
-- The server sends the React build for `/`, `/shop` and `/product/:slug` (with the title, description and schema.org data for each product written into the page for search engines). If `web/dist` does not exist, it falls back to the plain HTML pages in `public/`, so the store still runs without a build.
+- The server sends the React build for every customer page (`/`, `/shop`, `/product/:slug`, `/bag`, `/checkout`, `/track` and so on) (with the title, description and schema.org data for each product written into the page for search engines). If `web/dist` does not exist, it falls back to the plain HTML pages in `public/`, so the store still runs without a build.
 - For live editing of the React pages, run `npm start` in one terminal and `npm run dev --prefix web` in another, then open http://localhost:5173. Vite forwards the API and the older pages to port 3000.
 - The look is in `web/src/styles.css` (colours and sizes are the variables at the top). Pages are in `web/src/pages/`, the header, bag drawer and footer in `web/src/components/Layout.jsx`.
 

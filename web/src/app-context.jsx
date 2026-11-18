@@ -10,14 +10,17 @@ const FALLBACK = { brand: 'Ramani Tex', whatsapp: '', sellerName: '', sellerAddr
 export function AppProvider({ children }) {
   const [config, setConfig] = useState(null);
   const [account, setAccount] = useState(null);
+  const [accountReady, setAccountReady] = useState(false);
   const [bagOpen, setBagOpen] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
   const timer = useRef();
 
+  const loadAccount = useCallback(() => api('/api/account/me').then(setAccount).catch(() => setAccount(null)).finally(() => setAccountReady(true)), []);
+
   useEffect(() => {
     api('/api/config').then(setConfig).catch(() => setConfig(FALLBACK));
-    api('/api/account/me').then(setAccount).catch(() => setAccount(null));
-  }, []);
+    loadAccount();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toast = useCallback((msg) => {
     setToastMsg(msg);
@@ -25,6 +28,6 @@ export function AppProvider({ children }) {
     timer.current = setTimeout(() => setToastMsg(''), 3200);
   }, []);
 
-  const value = useMemo(() => ({ config: config || FALLBACK, ready: !!config, account, bagOpen, openBag: () => setBagOpen(true), closeBag: () => setBagOpen(false), toast, toastMsg }), [config, account, bagOpen, toast, toastMsg]);
+  const value = useMemo(() => ({ config: config || FALLBACK, ready: !!config, account, accountReady, loadAccount, bagOpen, openBag: () => setBagOpen(true), closeBag: () => setBagOpen(false), toast, toastMsg }), [config, account, accountReady, loadAccount, bagOpen, toast, toastMsg]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

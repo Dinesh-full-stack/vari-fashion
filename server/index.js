@@ -94,7 +94,7 @@ app.use(publicRouter);
 app.use('/api/admin', adminRouter);
 
 app.use('/app', express.static(WEB, { index: false, maxAge: config.isProd ? '30d' : 0 }));
-app.get(['/', '/shop'], (req, res, next) => {
+app.get(['/', '/shop', '/bag', '/checkout', '/thank-you', '/track', '/account', '/story', '/policies', '/bulk'], (req, res, next) => {
   const html = reactIndex();
   if (!html) return next();
   res.type('html').set('Cache-Control', 'no-cache').send(html);
@@ -110,7 +110,11 @@ for (const [route, file] of Object.entries({ '/admin': 'admin/index.html', '/tha
 }
 
 app.use('/api', (req, res) => res.status(404).json({ error: 'Not found.' }));
-app.use((req, res) => res.status(404).sendFile(path.join(PUBLIC, '404.html')));
+app.use((req, res) => {
+  const html = reactIndex();
+  if (html) return res.status(404).type('html').set('Cache-Control', 'no-cache').send(html); // the React app shows its own "not found" page
+  res.status(404).sendFile(path.join(PUBLIC, '404.html'));
+});
 
 // Errors: UserError messages are safe to show; anything else is logged and hidden.
 app.use((err, req, res, next) => {

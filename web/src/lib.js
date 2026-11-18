@@ -46,6 +46,22 @@ export const bag = {
   },
   setQty: (variantId, qty) => write(items.map((i) => (i.variantId === variantId ? { ...i, qty } : i)).filter((i) => i.qty > 0)),
   remove: (variantId) => write(items.filter((i) => i.variantId !== variantId)),
+  clear: () => write([]),
 };
 export const useBag = () => useSyncExternalStore(bag.subscribe, bag.get);
 export const bagCount = (list) => list.reduce((s, i) => s + i.qty, 0);
+
+/** Prices the bag on the server (it re-checks stock, prices, shipping and any coupon). */
+export async function quoteBag(paymentMethod = 'prepaid', extra = {}) {
+  const items = bag.get();
+  if (!items.length) return null;
+  return api('/api/bag/quote', { method: 'POST', body: { items: items.map(({ variantId, qty }) => ({ variantId, qty })), paymentMethod, ...extra } });
+}
+
+export const STATES = ['Andaman and Nicobar Islands', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chandigarh', 'Chhattisgarh',
+  'Dadra and Nagar Haveli and Daman and Diu', 'Delhi', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jammu and Kashmir', 'Jharkhand',
+  'Karnataka', 'Kerala', 'Ladakh', 'Lakshadweep', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha',
+  'Puducherry', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal'];
+
+/** SQLite timestamps ("2026-11-18 17:11:00") are UTC. */
+export const parseDate = (d) => new Date(String(d).includes('T') ? d : String(d).replace(' ', 'T') + 'Z');
