@@ -6,7 +6,7 @@ services:
     name: ramani-tex
     runtime: node
     plan: free
-    buildCommand: npm ci --omit=dev
+    buildCommand: npm ci --omit=dev && npm run build:web
     startCommand: npm start
     healthCheckPath: /api/config
     envVars:

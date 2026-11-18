@@ -42,6 +42,11 @@ app.use((req, res, next) => {
 const PUBLIC = path.join(ROOT, 'public');
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+// The React storefront (web/) is built into web/dist. Its pages (/, /shop, /product/:slug) are used when that build exists;
+// otherwise the server falls back to the plain HTML pages in public/, so the store still runs without a build.
+const WEB = path.join(ROOT, 'web', 'dist');
+const reactIndex = () => { try { return fs.readFileSync(path.join(WEB, 'index.html'), 'utf8'); } catch { return null; } };
+
 // Product pages get their title, description, social tags and schema.org data rendered on the server so search engines can read them.
 const productTemplate = () => fs.readFileSync(path.join(PUBLIC, 'product.html'), 'utf8');
 app.get('/product/:slug', (req, res, next) => {
@@ -62,12 +67,21 @@ app.get('/product/:slug', (req, res, next) => {
 <meta property="og:image" content="${esc(config.siteUrl + p.image)}"><meta property="product:price:amount" content="${(p.price / 100).toFixed(2)}"><meta property="product:price:currency" content="INR">
 <script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>`;
   const body = `<h1>${esc(p.name)}</h1><p>${esc(p.description)}</p><p>Price: ₹${(p.price / 100).toLocaleString('en-IN')}</p>`;
-  const html = productTemplate()
-    .replace(/\s*<meta name="description" content="">/, '')
-    .replace(/<title>[\s\S]*?<\/title>/, head)
-    .replace('<!--SSR-PRODUCT-->', `<div class="ssr-fallback">${body}</div>`)
-    .replace('"__PRODUCT_JSON__"', JSON.stringify(p).replace(/</g, '\\u003c'));
-  res.type('html').send(html);
+  const json = JSON.stringify(p).replace(/</g, '\\u003c');
+  const react = reactIndex();
+  // Function replacers keep "$" in product text from being read as a replacement pattern.
+  const html = react
+    ? react
+      .replace(/\s*<meta name="description"[^>]*>/, '')
+      .replace(/<title>[\s\S]*?<\/title>/, () => head)
+      .replace('<!--SSR-BODY-->', () => `<div class="ssr-fallback">${body}</div>`)
+      .replace('</head>', () => `<script id="product-data" type="application/json">${json}</script></head>`)
+    : productTemplate()
+      .replace(/\s*<meta name="description" content="">/, '')
+      .replace(/<title>[\s\S]*?<\/title>/, () => head)
+      .replace('<!--SSR-PRODUCT-->', () => `<div class="ssr-fallback">${body}</div>`)
+      .replace('"__PRODUCT_JSON__"', () => json);
+  res.type('html').set('Cache-Control', 'no-cache').send(html);
 });
 
 app.get('/robots.txt', (req, res) => res.type('text').send(`User-agent: *\nDisallow: /admin\nDisallow: /api/\nDisallow: /invoice/\nSitemap: ${config.siteUrl}/sitemap.xml\n`));
@@ -78,6 +92,13 @@ app.get('/sitemap.xml', (req, res) => {
 
 app.use(publicRouter);
 app.use('/api/admin', adminRouter);
+
+app.use('/app', express.static(WEB, { index: false, maxAge: config.isProd ? '30d' : 0 }));
+app.get(['/', '/shop'], (req, res, next) => {
+  const html = reactIndex();
+  if (!html) return next();
+  res.type('html').set('Cache-Control', 'no-cache').send(html);
+});
 
 app.use('/vendor/gsap', express.static(path.join(ROOT, 'node_modules', 'gsap', 'dist'), { maxAge: '30d' }));
 app.use('/uploads', express.static(config.uploadsDir, { maxAge: '30d' }));
