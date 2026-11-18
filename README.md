@@ -8,12 +8,22 @@ A premium online store for an Indian garment brand. It has three parts:
 
 Payments go through **Razorpay** (UPI, cards, net banking) or **cash on delivery**. Shipping and tracking go through **Shiprocket**. If you leave the keys for either one blank, that part runs in **test mode**, so you can try every flow locally without moving money.
 
+## The React storefront (`web/`)
+
+The home, shop and product pages are a **React** app (Vite + React Router) in `web/`. It talks to the same API as before, so orders, payments, shipping and the admin panel are unchanged. The bag, checkout, track, account, story, bulk and policies pages are still the plain HTML pages in `public/`. Both share one bag (the `bag.v1` entry in the browser's local storage), so a bag filled in React goes straight through to checkout.
+
+- `npm run build:web` installs the React app's packages and builds it into `web/dist`. **Run it before starting the server, and again after every change under `web/`.**
+- The server sends the React build for `/`, `/shop` and `/product/:slug` (with the title, description and schema.org data for each product written into the page for search engines). If `web/dist` does not exist, it falls back to the plain HTML pages in `public/`, so the store still runs without a build.
+- For live editing of the React pages, run `npm start` in one terminal and `npm run dev --prefix web` in another, then open http://localhost:5173. Vite forwards the API and the older pages to port 3000.
+- The look is in `web/src/styles.css` (colours and sizes are the variables at the top). Pages are in `web/src/pages/`, the header, bag drawer and footer in `web/src/components/Layout.jsx`.
+
 ## Run it locally
 
 Requires Node.js 22.5 or newer.
 
 ```bash
 npm install
+npm run build:web         # builds the React storefront (web/dist)
 cp .env.example .env      # then edit it
 npm start                 # http://localhost:3000
 npm test                  # end-to-end order flow tests
@@ -107,7 +117,7 @@ curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt install -y nodejs caddy
 
 # 2. Copy the project to /srv/store, then:
-cd /srv/store && npm ci --omit=dev
+cd /srv/store && npm ci --omit=dev && npm run build:web
 cp .env.example .env && nano .env   # NODE_ENV=production, SITE_URL=https://yourdomain.in, a long SESSION_SECRET, keys
 
 # 3. Run it as a service
