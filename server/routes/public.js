@@ -35,7 +35,8 @@ router.post('/api/webhooks/razorpay', express.raw({ type: '*/*', limit: '1mb' })
   res.json({ ok: true }); // always 200 for events we don't act on, so Razorpay stops retrying
 }));
 
-router.post('/api/webhooks/shiprocket', express.json({ limit: '1mb' }), (req, res) => {
+// Shiprocket refuses webhook URLs containing "shiprocket", so /courier is the path to register there.
+router.post(['/api/webhooks/shiprocket', '/api/webhooks/courier'], express.json({ limit: '1mb' }), (req, res) => {
   const token = config.shiprocket.webhookToken;
   if (!token || req.headers['x-api-key'] !== token) return res.status(401).json({ error: 'unauthorised' });
   const { awb, current_status: statusText } = req.body || {};

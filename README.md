@@ -155,7 +155,7 @@ Copy `/srv/backups` off the server too, for example with `rclone` to Google Driv
 
 1. Under Settings › API, create an API user and put its email and password in `.env`.
 2. Set `SHIPROCKET_PICKUP_LOCATION` to the exact pickup location name in your Shiprocket account.
-3. Under Settings › Webhooks, add `https://yourdomain.in/api/webhooks/shiprocket` with a token. Put the same token in `SHIPROCKET_WEBHOOK_TOKEN`. Orders then move to shipped, delivered or RTO automatically.
+3. Under Settings › Webhooks, add `https://yourdomain.in/api/webhooks/courier` (Shiprocket rejects URLs containing "shiprocket") with the `x-api-key` token type and a token. Put the same token in `SHIPROCKET_WEBHOOK_TOKEN`. Orders then move to shipped, delivered or RTO automatically.
 
 ### Launch checklist
 

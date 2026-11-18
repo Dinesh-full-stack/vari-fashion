@@ -60,11 +60,11 @@ function session(socket) {
   socket.on('close', onClose);
   socket.on('error', onClose);
   const read = () => new Promise((resolve, reject) => { waiting = { resolve, reject }; tryResolve(); });
-  const cmd = async (line, expect) => {
+  const cmd = async (line, expect, label) => {
     const p = read();
     if (line !== null) socket.write(line + '\r\n');
     const r = await p;
-    if (expect && !expect.includes(r.code)) throw new Error(`SMTP: ${line ? line.split(' ')[0] : 'greeting'} failed — ${r.text.slice(0, 200)}`);
+    if (expect && !expect.includes(r.code)) throw new Error(`SMTP: ${label || (line ? line.split(' ')[0] : 'greeting')} failed — ${r.text.slice(0, 200)}`);
     return r;
   };
   return { cmd, detach: () => { socket.off('data', onData); socket.off('close', onClose); socket.off('error', onClose); } };
@@ -95,14 +95,14 @@ async function smtpSend({ to, subject, text, html }) {
       await sess.cmd(`EHLO ${sender.split('@')[1] || 'localhost'}`, [250]);
     }
     await sess.cmd('AUTH LOGIN', [334]);
-    await sess.cmd(b64(user), [334]);
-    await sess.cmd(b64(pass), [235]);
+    await sess.cmd(b64(user), [334], 'login (username)');
+    await sess.cmd(b64(pass), [235], 'login (password or key)');
     await sess.cmd(`MAIL FROM:<${sender}>`, [250]);
     await sess.cmd(`RCPT TO:<${to}>`, [250, 251]);
     await sess.cmd('DATA', [354]);
     const body = buildMessage({ from: sender, fromName: fromName || setting('brand_name'), to, subject, text, html })
       .replace(/\r\n\./g, '\r\n..'); // dot-stuffing
-    await sess.cmd(`${body}\r\n.`, [250]);
+    await sess.cmd(`${body}\r\n.`, [250], 'message body');
     await sess.cmd('QUIT', [221]).catch(() => {});
   } finally {
     socket.end();
