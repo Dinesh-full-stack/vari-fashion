@@ -29,7 +29,12 @@ async function call(method, pathname, body) {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const msg = data?.message || `Shiprocket ${method} ${pathname} failed (${res.status})`;
+    // Shiprocket names the offending fields in `errors`; without them "Required field missing" is impossible to act on.
+    const fields = data?.errors && typeof data.errors === 'object'
+      ? Object.entries(data.errors).map(([k, v]) => `${k}: ${[].concat(v).join(' ')}`).join('; ')
+      : '';
+    const msg = [data?.message || `Shiprocket ${method} ${pathname} failed (${res.status})`, fields].filter(Boolean).join(' — ');
+    console.error(`[shiprocket] ${method} ${pathname} -> ${res.status}`, JSON.stringify(data).slice(0, 800));
     throw Object.assign(new Error(msg), { status: 502 });
   }
   return data;
@@ -48,7 +53,7 @@ export async function createShipment(order, items) {
   }
   const [first, ...rest] = order.customer_name.trim().split(/\s+/);
   const weightKg = Math.max(0.1, items.reduce((s, i) => s + (i.weight_grams || 400) * i.qty, 0) / 1000);
-  const created = await call('POST', '/orders/create/adhoc', {
+  const payload = {
     order_id: order.number,
     order_date: order.created_at.slice(0, 16).replace('T', ' '),
     pickup_location: config.shiprocket.pickupLocation,
@@ -74,7 +79,11 @@ export async function createShipment(order, items) {
     shipping_charges: order.shipping_paise / 100,
     sub_total: order.total_paise / 100,
     length: 30, breadth: 25, height: 5, weight: weightKg,
-  });
+  };
+  // Send optional text fields only when they have a value: an empty string can be read as "missing".
+  for (const k of ['billing_address_2']) if (!payload[k]) delete payload[k];
+  for (const it of payload.order_items) if (!it.hsn) delete it.hsn;
+  const created = await call('POST', '/orders/create/adhoc', payload);
   const awb = await call('POST', '/courier/assign/awb', { shipment_id: created.shipment_id });
   const data = awb?.response?.data || {};
   try { await call('POST', '/courier/generate/pickup', { shipment_id: [created.shipment_id] }); } catch { /* pickup can be scheduled from the Shiprocket panel */ }
