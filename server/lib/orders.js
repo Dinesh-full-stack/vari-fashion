@@ -361,6 +361,17 @@ export function changeStatus(orderId, next, opts = {}) {
   return after;
 }
 
+/** A customer may cancel until the parcel has a tracking number: unpaid, confirmed or packed. After that they can return it once it is delivered. */
+export const canCustomerCancel = (o) => ['pending_payment', 'confirmed', 'packed'].includes(o.status) && !o.awb;
+
+export function cancelByCustomer(order, reason = '') {
+  if (!canCustomerCancel(order)) throw new UserError('This order has already shipped or been closed, so it can no longer be cancelled here. Once it is delivered you can request a return from the Track order page.');
+  const why = String(reason || '').replace(/\s+/g, ' ').trim().slice(0, 200);
+  const after = changeStatus(order.id, 'cancelled', { actor: 'customer', note: `Cancelled by the customer${why ? `: ${why}` : ''}` });
+  notifyOrder(order.id, 'customer_cancelled'); // tells the owner; changeStatus already emailed the customer
+  return after;
+}
+
 export function requestReturn(order, body) {
   const r = requestReturnTx(order, body);
   notifyReturn(r.number, 'requested');
