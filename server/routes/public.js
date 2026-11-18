@@ -97,7 +97,7 @@ router.get('/api/products/:slug', (req, res) => {
 });
 
 router.get('/img/ph/:kind/:hex.svg', (req, res) => {
-  res.type('image/svg+xml').set('Cache-Control', 'public, max-age=86400').send(placeholderSvg(req.params.kind, req.params.hex, req.query.view));
+  res.type('image/svg+xml').set('Cache-Control', 'public, max-age=86400').send(placeholderSvg(req.params.kind, req.params.hex, req.query.view, req.query.cut === '1'));
 });
 
 // ---- Bag & checkout ----

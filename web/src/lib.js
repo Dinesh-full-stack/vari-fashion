@@ -1,6 +1,8 @@
 import { useEffect, useSyncExternalStore } from 'react';
 
 export const money = (paise) => '₹' + (Number(paise || 0) / 100).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+// Placeholder garment pictures can be drawn without their grey background so they sit on glass. Real photos pass through unchanged.
+export const cut = (src) => (/^\/img\/ph\//.test(src || '') ? `${src}${src.includes('?') ? '&' : '?'}cut=1` : src);
 export const offPct = (p) => (p.mrp > p.price ? Math.round((1 - p.price / p.mrp) * 100) : 0);
 
 export async function api(path, { method = 'GET', body } = {}) {
